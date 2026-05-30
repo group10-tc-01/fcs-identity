@@ -1,9 +1,9 @@
+using System.Text.Json;
+using Confluent.Kafka;
 using Fcg.Identity.Application.Abstractions.Messaging;
 using Fcg.Identity.Infrastructure.Kafka.Settings;
-using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
 
 namespace Fcg.Identity.Infrastructure.Kafka.Messaging;
 

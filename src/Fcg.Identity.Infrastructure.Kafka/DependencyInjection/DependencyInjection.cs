@@ -10,8 +10,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddKafkaInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<KafkaSettings>(configuration.GetSection(KafkaSettings.SectionName));
+        services
+            .AddOptions<KafkaSettings>()
+            .Bind(configuration.GetRequiredSection(KafkaSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddSingleton<IMessagePublisher, KafkaMessagePublisher>();
+
         return services;
     }
 }

@@ -6,7 +6,41 @@ services:
       SA_PASSWORD: "Your_password123"
       MSSQL_PID: "Developer"
     ports:
-      - "5433:1433"
+      - "1433:1433"
+
+  keycloak-db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      - sqlserver
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        until /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P Your_password123 -C -Q "SELECT 1"; do
+          echo "Waiting for SQL Server..."
+          sleep 2
+        done
+        /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P Your_password123 -C -Q "IF DB_ID(N'KeycloakDb') IS NULL CREATE DATABASE [KeycloakDb];"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_DB: mssql
+      KC_DB_URL: "jdbc:sqlserver://sqlserver:1433;databaseName=KeycloakDb;encrypt=false;trustServerCertificate=true"
+      KC_DB_USERNAME: sa
+      KC_DB_PASSWORD: "Your_password123"
+      KC_TRANSACTION_XA_ENABLED: "false"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    depends_on:
+      keycloak-db-init:
+        condition: service_completed_successfully
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0

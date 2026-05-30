@@ -1,6 +1,6 @@
-using Fcg.Identity.WebApi.Models;
 using System.Net;
 using System.Text.Json;
+using Fcg.Identity.WebApi.Models;
 
 namespace Fcg.Identity.WebApi.Middlewares;
 

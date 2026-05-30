@@ -16,9 +16,8 @@
     <Project Path="src/Fcg.Identity.Application/Fcg.Identity.Application.csproj" />
   </Folder>
   <Folder Name="/src/2 - Infrastructure/">
-    <Project Path="src/Fcg.Identity.Infrastructure.Auth/Fcg.Identity.Infrastructure.Auth.csproj" />
-    <Project Path="src/Fcg.Identity.Infrastructure.Http/Fcg.Identity.Infrastructure.Http.csproj" />
     <Project Path="src/Fcg.Identity.Infrastructure.Kafka/Fcg.Identity.Infrastructure.Kafka.csproj" />
+    <Project Path="src/Fcg.Identity.Infrastructure.Keycloak/Fcg.Identity.Infrastructure.Keycloak.csproj" />
     <Project Path="src/Fcg.Identity.Infrastructure.SqlServer/Fcg.Identity.Infrastructure.SqlServer.csproj" />
   </Folder>
   <Folder Name="/src/3 - WebApi/">

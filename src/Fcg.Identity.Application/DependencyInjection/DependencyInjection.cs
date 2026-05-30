@@ -1,8 +1,8 @@
+using System.Reflection;
 using Fcg.Identity.Application.Abstractions.Messaging;
 using Fcg.Identity.Application.Messaging;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace Fcg.Identity.Application.DependencyInjection;
 

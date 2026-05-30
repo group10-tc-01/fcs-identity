@@ -1,5 +1,5 @@
+using Fcg.Identity.Domain.Shared.Results;
 using MediatR;
-using Fcg.Identity.Domain;
 
 namespace Fcg.Identity.Application.Abstractions.Messaging;
 

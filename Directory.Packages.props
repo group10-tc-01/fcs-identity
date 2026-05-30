@@ -1,62 +1,69 @@
 <Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <!-- Web API -->
-    <PackageVersion Include="Asp.Versioning.Http" Version="8.1.0" />
-    <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageVersion Include="MediatR" Version="13.1.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.11" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+	<ItemGroup Label="API">
+		<PackageVersion Include="Asp.Versioning.Http" Version="8.1.0" />
+		<PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+		<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+		<PackageVersion Include="MediatR" Version="13.1.0" />
+		<PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.11" />
+	</ItemGroup>
 
-    <!-- Application -->
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.11" />
+	<ItemGroup Label="Observability">
+		<PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+		<PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.1" />
+		<PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
+		<PackageVersion Include="Serilog" Version="4.3.0" />
+		<PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+		<PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+		<PackageVersion Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+		<PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+	</ItemGroup>
 
-    <!-- Infrastructure.Http -->
-    <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="8.0.11" />
-    <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
+	<ItemGroup Label="Validation">
+		<PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+	</ItemGroup>
 
-    <!-- Infrastructure.Auth -->
-    <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.22" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+	<ItemGroup Label="Options and dependency injection">
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.11" />
+		<PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.11" />
+		<PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.11" />
+		<PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.11" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.11" />
+	</ItemGroup>
 
-    <!-- Infrastructure.SqlServer -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+	<ItemGroup Label="Identity provider">
+		<PackageVersion Include="Keycloak.AuthServices.Authentication" Version="2.7.0" />
+		<PackageVersion Include="Keycloak.AuthServices.Sdk" Version="2.7.0" />
+	</ItemGroup>
 
-    <!-- Infrastructure.PostgreSql -->
+	<ItemGroup Label="Persistence">
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11" />
+		<PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.11" />
+	</ItemGroup>
 
-    <!-- EF Core shared (SqlServer or PostgreSql) -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.11" />
+	<ItemGroup Label="Messaging">
+		<PackageVersion Include="Confluent.Kafka" Version="2.6.1" />
+	</ItemGroup>
 
-    <!-- Infrastructure.MongoDb -->
-
-    <!-- Infrastructure.Kafka -->
-    <PackageVersion Include="Confluent.Kafka" Version="2.6.1" />
-
-    <!-- Tests -->
-    <PackageVersion Include="Bogus" Version="35.6.5" />
-    <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
-    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.22" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
-    <PackageVersion Include="Reqnroll.xUnit" Version="2.2.1" />
-    <PackageVersion Include="xunit" Version="2.5.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
-  </ItemGroup>
+	<ItemGroup Label="Tests">
+		<PackageVersion Include="Bogus" Version="35.6.5" />
+		<PackageVersion Include="NSubstitute" Version="5.1.0" />
+		<PackageVersion Include="coverlet.collector" Version="6.0.0" />
+		<PackageVersion Include="FluentAssertions" Version="8.8.0" />
+		<PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.22" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+		<PackageVersion Include="Reqnroll.xUnit" Version="2.2.1" />
+		<PackageVersion Include="xunit" Version="2.5.3" />
+		<PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+	</ItemGroup>
 </Project>

@@ -11,9 +11,8 @@ public class ProjectStructureTests
     {
         "src/Fcg.Identity.Application/Fcg.Identity.Application.csproj",
         "src/Fcg.Identity.Domain/Fcg.Identity.Domain.csproj",
-        "src/Fcg.Identity.Infrastructure.Auth/Fcg.Identity.Infrastructure.Auth.csproj",
-        "src/Fcg.Identity.Infrastructure.Http/Fcg.Identity.Infrastructure.Http.csproj",
         "src/Fcg.Identity.Infrastructure.Kafka/Fcg.Identity.Infrastructure.Kafka.csproj",
+        "src/Fcg.Identity.Infrastructure.Keycloak/Fcg.Identity.Infrastructure.Keycloak.csproj",
         "src/Fcg.Identity.Infrastructure.SqlServer/Fcg.Identity.Infrastructure.SqlServer.csproj",
         "src/Fcg.Identity.Messages/Fcg.Identity.Messages.csproj",
         "src/Fcg.Identity.WebApi/Fcg.Identity.WebApi.csproj"
@@ -21,30 +20,39 @@ public class ProjectStructureTests
 
     [Theory]
     [MemberData(nameof(ProductionProjects))]
-    public void Production_Projects_Should_Target_Net8(string relativeProjectPath)
+    public void Given_ProductionProject_When_ProjectFileIsValidated_Then_ShouldTargetNet8(string relativeProjectPath)
     {
+        // Arrange
         var projectPath = Path.Combine(RepositoryRoot, relativeProjectPath);
+
+        // Act
         var targetFramework = GetTargetFramework(projectPath);
 
+        // Assert
         targetFramework.Should().Be("net8.0", "Fase 05 backend services are standardized on .NET 8");
     }
 
     [Fact]
-    public void Source_Projects_Should_Follow_Fcg_Identity_Structure()
+    public void Given_SourceProjects_When_ProjectStructureIsValidated_Then_ShouldFollowFcgIdentityStructure()
     {
+        // Arrange
         var expectedProjectDirectories = new[]
         {
             "src/Fcg.Identity.Domain",
             "src/Fcg.Identity.Application",
-            "src/Fcg.Identity.Infrastructure.Auth",
-            "src/Fcg.Identity.Infrastructure.Http",
             "src/Fcg.Identity.Infrastructure.Kafka",
+            "src/Fcg.Identity.Infrastructure.Keycloak",
             "src/Fcg.Identity.Infrastructure.SqlServer",
             "src/Fcg.Identity.WebApi"
         };
 
-        expectedProjectDirectories
+        // Act
+        var projectDirectories = expectedProjectDirectories
             .Select(path => Path.Combine(RepositoryRoot, path))
+            .ToArray();
+
+        // Assert
+        projectDirectories
             .Should()
             .OnlyContain(path => Directory.Exists(path), "fcg-identity must preserve the phase 04 clean architecture project layout");
     }

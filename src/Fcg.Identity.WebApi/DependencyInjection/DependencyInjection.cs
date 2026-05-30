@@ -1,24 +1,82 @@
-using Asp.Versioning;
-using Fcg.Identity.WebApi.Middlewares;
-using Fcg.Identity.WebApi.Observability;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.OpenApi.Models;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using Serilog;
 using System.Text.Json.Serialization;
-
+using Asp.Versioning;
+using Fcg.Identity.Infrastructure.SqlServer.Persistence;
+using Fcg.Identity.WebApi.Filters;
+using Fcg.Identity.WebApi.Observability;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Sinks.OpenTelemetry;
 namespace Fcg.Identity.WebApi.DependencyInjection;
 
 public static class DependencyInjection
 {
     public static IServiceCollection AddWebApi(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHttpContextAccessor();
         services.AddControllers()
-            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+               .AddJsonOptions(options =>
+               {
+                   options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+               });
 
+        services.AddEndpointsApiExplorer();
+        services.AddHttpContextAccessor();
+        services.AddSwaggerConfiguration(configuration);
+
+        services.AddVersioning();
+        services.AddFilters();
+        services.AddAuthorization();
+        services.AddHealthChecks().AddDbContextCheck<FcgIdentityDbContext>();
+        services.AddRouting(options => options.LowercaseUrls = true);
+        services.AddObservabilitySettings(configuration);
+        services.AddObservability(configuration);
+        services.AddSerilogLogging(configuration);
+        return services;
+    }
+
+    private static void AddSwaggerConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "FCG.Identity - V1",
+                Version = "v1.0"
+            });
+
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = @"JWT Authorization header using the Bearer scheme.
+                      Enter 'Bearer' [space] and then your token in the text input below.
+                      Example: 'Bearer 12345abcdef'",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header
+                        },
+                        new List<string>()
+                    }
+            });
+        });
+    }
+
+    private static void AddVersioning(this IServiceCollection services)
+    {
         services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -30,74 +88,96 @@ public static class DependencyInjection
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
+    }
 
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options =>
+    private static void AddFilters(this IServiceCollection services)
+    {
+        services.AddMvc(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = "Fcg.Identity API",
-                Version = "v1"
-            });
+            options.Filters.Add<TrimStringsActionFilter>();
         });
-
-        services.AddHealthChecks();
-        services.AddRouting(options => options.LowercaseUrls = true);
-
-        services.AddObservability(configuration);
-        services.AddSerilogLogging();
-
-        return services;
     }
 
-    public static WebApplication UseWebApiPipeline(this WebApplication app)
+    private static void AddObservability(this IServiceCollection services, IConfiguration configuration)
     {
-        app.UseMiddleware<GlobalExceptionMiddleware>();
-        app.UseSwagger();
-        app.UseSwaggerUI();
-        app.UseAuthentication();
-        app.UseAuthorization();
-        app.MapControllers();
-        app.MapHealthChecks("/health", new HealthCheckOptions());
-        return app;
-    }
+        var settings = GetObservabilitySettings(configuration);
 
-    private static IServiceCollection AddObservability(this IServiceCollection services, IConfiguration configuration)
-    {
-        var options = new ObservabilityOptions();
-        configuration.GetSection(ObservabilityOptions.SectionName).Bind(options);
+        var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
+
+        var resourceBuilder = ObservabilityTelemetry.CreateResourceBuilder(settings, environment);
 
         services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService(options.ServiceName))
-            .WithTracing(builder =>
-            {
-                builder.AddAspNetCoreInstrumentation();
-                builder.AddHttpClientInstrumentation();
-            })
-            .WithMetrics(builder =>
-            {
-                builder.AddAspNetCoreInstrumentation();
-                builder.AddHttpClientInstrumentation();
-                builder.AddRuntimeInstrumentation();
-            });
-
-        return services;
+            .WithTracing(builder => builder.ConfigureTracing(settings, resourceBuilder))
+            .WithMetrics(builder => builder.ConfigureMetrics(settings, resourceBuilder));
     }
 
-    private static IServiceCollection AddSerilogLogging(this IServiceCollection services)
+    private static void AddSerilogLogging(this IServiceCollection services, IConfiguration configuration)
     {
-        Log.Logger = new LoggerConfiguration()
+        var settings = GetObservabilitySettings(configuration);
+
+        var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
+
+        var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.Information()
             .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .CreateLogger();
+            .Enrich.WithMachineName()
+            .Enrich.WithProperty("Application", "FCG.Identity")
+            .Enrich.WithProperty("Environment", environment)
+            .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}");
 
-        services.AddLogging(builder =>
+        if (settings.EnableOtlpExporter && !string.IsNullOrEmpty(settings.OtlpEndpoint))
         {
-            builder.ClearProviders();
-            builder.AddSerilog();
-        });
+            loggerConfig.WriteTo.OpenTelemetry(otlpOptions =>
+            {
+                otlpOptions.Endpoint = $"{settings.OtlpEndpoint}/otlp/v1/logs";
+                otlpOptions.Protocol = OtlpProtocol.HttpProtobuf;
+                otlpOptions.Headers = new Dictionary<string, string>
+                {
+                    ["Authorization"] = settings.OtlpAuthHeader
+                };
+                otlpOptions.ResourceAttributes = new Dictionary<string, object>
+                {
+                    ["service.name"] = settings.ServiceName,
+                    ["deployment.environment"] = environment
+                };
+            });
+        }
 
-        return services;
+        Log.Logger = loggerConfig.CreateLogger();
+
+        Log.Information("Starting {Application} application", "FCG.Identity");
+        Log.Information("Environment: {Environment}", environment);
+
+        if (settings.EnableOtlpExporter)
+        {
+            Log.Information("OTLP exporter enabled — sending telemetry to {Endpoint}", settings.OtlpEndpoint);
+        }
+        else
+        {
+            Log.Information("OTLP exporter disabled — telemetry is console-only");
+        }
+
+        services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.ClearProviders();
+            loggingBuilder.AddSerilog();
+        });
+    }
+
+    private static void AddObservabilitySettings(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<ObservabilitySettings>()
+            .Bind(configuration.GetRequiredSection(ObservabilitySettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+    }
+
+    private static ObservabilitySettings GetObservabilitySettings(IConfiguration configuration)
+    {
+        return configuration
+            .GetRequiredSection(ObservabilitySettings.SectionName)
+            .Get<ObservabilitySettings>()
+            ?? throw new InvalidOperationException("Observability settings must be configured.");
     }
 }
