@@ -38,15 +38,15 @@ namespace Fcg.Identity.FunctionalTests.Features
         {
             this._testOutputHelper = testOutputHelper;
         }
-
+        
         public static async System.Threading.Tasks.Task FeatureSetupAsync()
         {
         }
-
+        
         public static async System.Threading.Tasks.Task FeatureTearDownAsync()
         {
         }
-
+        
         public async System.Threading.Tasks.Task TestInitializeAsync()
         {
             testRunner = global::Reqnroll.TestRunnerManager.GetTestRunnerForAssembly(featureHint: featureInfo);
@@ -243,7 +243,7 @@ this.ScenarioInitialize(scenarioInfo);
             }
             await this.ScenarioCleanupAsync();
         }
-
+        
         [Xunit.SkippableFactAttribute(DisplayName="Recusar renovação com refresh token inválido")]
         [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
         [Xunit.TraitAttribute("Description", "Recusar renovação com refresh token inválido")]
@@ -283,7 +283,7 @@ this.ScenarioInitialize(scenarioInfo);
             }
             await this.ScenarioCleanupAsync();
         }
-
+        
         [Xunit.SkippableFactAttribute(DisplayName="Consultar perfil autenticado de doador")]
         [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
         [Xunit.TraitAttribute("Description", "Consultar perfil autenticado de doador")]
@@ -320,7 +320,7 @@ this.ScenarioInitialize(scenarioInfo);
             }
             await this.ScenarioCleanupAsync();
         }
-
+        
         [Xunit.SkippableFactAttribute(DisplayName="Recusar registro de doador inválido")]
         [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
         [Xunit.TraitAttribute("Description", "Recusar registro de doador inválido")]

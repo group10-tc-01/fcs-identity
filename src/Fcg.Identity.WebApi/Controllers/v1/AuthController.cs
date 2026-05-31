@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fcg.Identity.WebApi.Controllers.v1;
 
+[Consumes("application/json")]
 [Route("api/v{version:apiVersion}/auth")]
 public sealed class AuthController(IMediator mediator) : BaseApiController(mediator)
 {
