@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
@@ -12,6 +12,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fcg.Identity.Application\Fcg.Identity.Application.csproj" />
     <ProjectReference Include="..\..\src\Fcg.Identity.Domain\Fcg.Identity.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Fcg.Identity.Messages\Fcg.Identity.Messages.csproj" />
   </ItemGroup>
 </Project>

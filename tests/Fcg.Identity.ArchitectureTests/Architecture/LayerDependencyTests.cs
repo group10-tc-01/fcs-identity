@@ -1,6 +1,5 @@
 using System.Reflection;
 using Fcg.Identity.Domain.DonorProfiles;
-using Fcg.Identity.Messages;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
 using NetArchTest.Rules;
@@ -11,7 +10,6 @@ public class LayerDependencyTests
 {
     private static readonly Assembly DomainAssembly = typeof(DonorProfile).Assembly;
     private static readonly Assembly ApplicationAssembly = typeof(Fcg.Identity.Application.DependencyInjection.DependencyInjection).Assembly;
-    private static readonly Assembly MessagesAssembly = typeof(ResourceMessages).Assembly;
     private static readonly Assembly WebApiAssembly = typeof(ApiResponse<>).Assembly;
 
     private static readonly Assembly[] InfrastructureAssemblyValues =
@@ -32,7 +30,6 @@ public class LayerDependencyTests
     {
         { DomainAssembly, WebApiAssembly.GetName().Name! },
         { ApplicationAssembly, WebApiAssembly.GetName().Name! },
-        { MessagesAssembly, WebApiAssembly.GetName().Name! },
         { InfrastructureAssemblyValues[0], WebApiAssembly.GetName().Name! },
         { InfrastructureAssemblyValues[1], WebApiAssembly.GetName().Name! },
         { InfrastructureAssemblyValues[2], WebApiAssembly.GetName().Name! }
@@ -45,7 +42,6 @@ public class LayerDependencyTests
         var forbiddenDependencies = new[]
         {
             ApplicationAssembly.GetName().Name!,
-            MessagesAssembly.GetName().Name!,
             WebApiAssembly.GetName().Name!,
             InfrastructureAssemblyValues[0].GetName().Name!,
             InfrastructureAssemblyValues[1].GetName().Name!,
@@ -60,32 +56,7 @@ public class LayerDependencyTests
             .GetResult();
 
         // Assert
-        result.ShouldBeSuccessful("the domain layer must remain independent from application, infrastructure, messages, and web api projects");
-    }
-
-    [Fact]
-    public void Given_MessagesLayer_When_ArchitectureIsValidated_Then_ShouldNotDependOnOtherFcgProjects()
-    {
-        // Arrange
-        var forbiddenDependencies = new[]
-        {
-            DomainAssembly.GetName().Name!,
-            ApplicationAssembly.GetName().Name!,
-            WebApiAssembly.GetName().Name!,
-            InfrastructureAssemblyValues[0].GetName().Name!,
-            InfrastructureAssemblyValues[1].GetName().Name!,
-            InfrastructureAssemblyValues[2].GetName().Name!
-        };
-
-        // Act
-        var result = Types
-            .InAssembly(MessagesAssembly)
-            .Should()
-            .NotHaveDependencyOnAny(forbiddenDependencies)
-            .GetResult();
-
-        // Assert
-        result.ShouldBeSuccessful("message contracts should stay isolated so services can share contracts without pulling application code");
+        result.ShouldBeSuccessful("the domain layer must remain independent from application, infrastructure, and web api projects");
     }
 
     [Theory]

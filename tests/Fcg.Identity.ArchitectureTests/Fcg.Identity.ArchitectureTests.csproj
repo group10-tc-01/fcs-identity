@@ -27,7 +27,6 @@
     <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.Kafka\Fcg.Identity.Infrastructure.Kafka.csproj" />
     <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.Keycloak\Fcg.Identity.Infrastructure.Keycloak.csproj" />
     <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.SqlServer\Fcg.Identity.Infrastructure.SqlServer.csproj" />
-    <ProjectReference Include="..\..\src\Fcg.Identity.Messages\Fcg.Identity.Messages.csproj" />
     <ProjectReference Include="..\..\src\Fcg.Identity.WebApi\Fcg.Identity.WebApi.csproj" />
   </ItemGroup>
 </Project>

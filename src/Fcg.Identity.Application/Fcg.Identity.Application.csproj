@@ -8,6 +8,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Fcg.Identity.Domain\Fcg.Identity.Domain.csproj" />
-    <ProjectReference Include="..\Fcg.Identity.Messages\Fcg.Identity.Messages.csproj" />
   </ItemGroup>
 </Project>

@@ -14,7 +14,6 @@ COPY ["src/Fcg.Identity.Domain/Fcg.Identity.Domain.csproj", "src/Fcg.Identity.Do
 COPY ["src/Fcg.Identity.Infrastructure.Kafka/Fcg.Identity.Infrastructure.Kafka.csproj", "src/Fcg.Identity.Infrastructure.Kafka/"]
 COPY ["src/Fcg.Identity.Infrastructure.Keycloak/Fcg.Identity.Infrastructure.Keycloak.csproj", "src/Fcg.Identity.Infrastructure.Keycloak/"]
 COPY ["src/Fcg.Identity.Infrastructure.SqlServer/Fcg.Identity.Infrastructure.SqlServer.csproj", "src/Fcg.Identity.Infrastructure.SqlServer/"]
-COPY ["src/Fcg.Identity.Messages/Fcg.Identity.Messages.csproj", "src/Fcg.Identity.Messages/"]
 COPY ["src/Fcg.Identity.WebApi/Fcg.Identity.WebApi.csproj", "src/Fcg.Identity.WebApi/"]
 
 RUN dotnet restore "./src/Fcg.Identity.WebApi/Fcg.Identity.WebApi.csproj"

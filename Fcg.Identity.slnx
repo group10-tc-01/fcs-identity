@@ -10,7 +10,6 @@
   <Folder Name="/src/" />
   <Folder Name="/src/0 - Domain/">
     <Project Path="src/Fcg.Identity.Domain/Fcg.Identity.Domain.csproj" />
-    <Project Path="src/Fcg.Identity.Messages/Fcg.Identity.Messages.csproj" />
   </Folder>
   <Folder Name="/src/1 - Application/">
     <Project Path="src/Fcg.Identity.Application/Fcg.Identity.Application.csproj" />

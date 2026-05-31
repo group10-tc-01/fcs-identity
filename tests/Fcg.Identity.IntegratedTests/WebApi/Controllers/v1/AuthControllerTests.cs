@@ -146,10 +146,10 @@ public sealed class AuthControllerTests : IAsyncLifetime
     public async Task Given_LoginEndpoint_Called_When_RequestIsValid_Then_ShouldReturnOk()
     {
         // Arrange
-        var request = new LoginRequest("doador@email.com", "Password123!");
+        var command = new LoginCommand("doador@email.com", "Password123!");
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
         var payload = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
 
         // Assert
@@ -165,10 +165,10 @@ public sealed class AuthControllerTests : IAsyncLifetime
     public async Task Given_LoginEndpoint_Called_When_RequestIsInvalid_Then_ShouldReturnBadRequest()
     {
         // Arrange
-        var request = new LoginRequest("invalid-email", string.Empty);
+        var command = new LoginCommand("invalid-email", string.Empty);
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
         var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
 
         // Assert
@@ -184,10 +184,10 @@ public sealed class AuthControllerTests : IAsyncLifetime
         // Arrange
         _factory.IdentityProvider.ConfigureLoginResult(
             Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password."));
-        var request = new LoginRequest("doador@email.com", "wrong-password");
+        var command = new LoginCommand("doador@email.com", "wrong-password");
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
         var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
 
         // Assert

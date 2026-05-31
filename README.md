@@ -8,7 +8,6 @@ API generated with the **Modular Clean Architecture** template.
 |---|---|
 | `Domain` | Entities, domain exceptions, repository interfaces |
 | `Application` | Use cases, CQRS abstractions, validation |
-| `Messages` | Shared message contracts (events) |
 | `Infrastructure.Auth` | JWT authentication, BCrypt password hashing _(optional)_ |
 | `Infrastructure.SqlServer` | EF Core + SQL Server persistence _(optional)_ |
 | `Infrastructure.PostgreSql` | EF Core + PostgreSQL persistence _(optional)_ |
@@ -190,7 +189,6 @@ dotnet run --project src/Fcg.Identity.WebApi
 src/
   Fcg.Identity.Domain/
   Fcg.Identity.Application/
-  Fcg.Identity.Messages/
   Fcg.Identity.Infrastructure.Keycloak/   # Keycloak integration
   Fcg.Identity.Infrastructure.SqlServer/  # present if --useSqlServer
   Fcg.Identity.Infrastructure.Kafka/      # present if --useKafka

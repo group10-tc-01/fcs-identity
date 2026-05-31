@@ -27,10 +27,8 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
-        var command = new LoginCommand(request.Email, request.Password);
-
         var result = await _mediator.Send(command, cancellationToken);
 
         return result.Match<IActionResult>(

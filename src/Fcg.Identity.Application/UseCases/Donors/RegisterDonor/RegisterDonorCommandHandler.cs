@@ -24,8 +24,7 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
 
     public async Task<Result<RegisterDonorResponse>> Handle(RegisterDonorCommand command, CancellationToken cancellationToken)
     {
-        var normalizedFullName = command.FullName.Trim();
-        var normalizedEmail = command.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = command.Email.ToLowerInvariant();
         var normalizedCpf = new string(command.Cpf.Where(char.IsDigit).ToArray());
 
         if (await _donorProfileRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken))
@@ -39,7 +38,7 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
         }
 
         var identityUserResult = await _identityProvider.CreateDonorAsync(
-            new CreateDonorIdentityUserRequest(normalizedFullName, normalizedEmail, command.Password),
+            new CreateDonorIdentityUserRequest(command.FullName, normalizedEmail, command.Password),
             cancellationToken);
 
         if (identityUserResult.IsFailure)
@@ -49,7 +48,7 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
 
         var donorProfileResult = DonorProfile.Create(
             identityUserResult.Value.KeycloakUserId,
-            normalizedFullName,
+            command.FullName,
             normalizedEmail,
             normalizedCpf);
 

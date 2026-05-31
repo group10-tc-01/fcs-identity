@@ -14,7 +14,6 @@ public class ProjectStructureTests
         "src/Fcg.Identity.Infrastructure.Kafka/Fcg.Identity.Infrastructure.Kafka.csproj",
         "src/Fcg.Identity.Infrastructure.Keycloak/Fcg.Identity.Infrastructure.Keycloak.csproj",
         "src/Fcg.Identity.Infrastructure.SqlServer/Fcg.Identity.Infrastructure.SqlServer.csproj",
-        "src/Fcg.Identity.Messages/Fcg.Identity.Messages.csproj",
         "src/Fcg.Identity.WebApi/Fcg.Identity.WebApi.csproj"
     };
 

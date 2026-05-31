@@ -19,7 +19,7 @@ public sealed class AuthEndpointStepDefinitions
     private readonly FunctionalWebApplicationFactory _factory;
     private readonly HttpClient _client;
     private RegisterDonorCommand? _registerDonorCommand;
-    private LoginRequest? _loginRequest;
+    private LoginCommand? _loginCommand;
     private HttpResponseMessage? _response;
     private string? _responseBody;
 
@@ -36,7 +36,7 @@ public sealed class AuthEndpointStepDefinitions
         _response = null;
         _responseBody = null;
         _registerDonorCommand = null;
-        _loginRequest = null;
+        _loginCommand = null;
     }
 
     [Given("que tenho uma requisição válida para registrar um doador")]
@@ -57,7 +57,7 @@ public sealed class AuthEndpointStepDefinitions
     [Given("que tenho uma requisição válida de login")]
     public void Given_QueTenhoUmaRequisicaoValidaDeLogin()
     {
-        _loginRequest = new LoginRequest("doador@email.com", "Password123!");
+        _loginCommand = new LoginCommand("doador@email.com", "Password123!");
     }
 
     [Given("que o provedor de identidade recusará as credenciais")]
@@ -70,7 +70,7 @@ public sealed class AuthEndpointStepDefinitions
     [Given("que tenho uma requisição de login com credenciais inválidas")]
     public void Given_QueTenhoUmaRequisicaoDeLoginComCredenciaisInvalidas()
     {
-        _loginRequest = new LoginRequest("doador@email.com", "wrong-password");
+        _loginCommand = new LoginCommand("doador@email.com", "wrong-password");
     }
 
     [When("eu enviar a requisição para registrar o doador")]
@@ -84,9 +84,9 @@ public sealed class AuthEndpointStepDefinitions
     [When("eu enviar a requisição de login")]
     public async Task When_EuEnviarARequisicaoDeLogin()
     {
-        _loginRequest.Should().NotBeNull();
+        _loginCommand.Should().NotBeNull();
 
-        await SendAsync(() => _client.PostAsJsonAsync("/api/v1/auth/login", _loginRequest));
+        await SendAsync(() => _client.PostAsJsonAsync("/api/v1/auth/login", _loginCommand));
     }
 
     [Then("a resposta deve ter status {int}")]
