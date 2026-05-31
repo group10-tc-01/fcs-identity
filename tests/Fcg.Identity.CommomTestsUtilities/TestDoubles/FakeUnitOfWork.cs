@@ -6,6 +6,11 @@ public sealed class FakeUnitOfWork : IUnitOfWork
 {
     public int SaveChangesCalls { get; private set; }
 
+    public void Reset()
+    {
+        SaveChangesCalls = 0;
+    }
+
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SaveChangesCalls++;

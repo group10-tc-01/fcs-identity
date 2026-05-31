@@ -17,6 +17,16 @@ public sealed class FakeIdentityProvider : IIdentityProvider
     public int LoginCalls { get; private set; }
     public LoginIdentityUserRequest? LastLoginRequest { get; private set; }
 
+    public void Reset()
+    {
+        _createDonorResult = new CreateDonorIdentityUserResponse(Guid.NewGuid().ToString());
+        _loginResult = new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer");
+        CreateDonorCalls = 0;
+        LastCreateDonorRequest = null;
+        LoginCalls = 0;
+        LastLoginRequest = null;
+    }
+
     public void ConfigureCreateDonorResult(Result<CreateDonorIdentityUserResponse> result)
     {
         _createDonorResult = result;

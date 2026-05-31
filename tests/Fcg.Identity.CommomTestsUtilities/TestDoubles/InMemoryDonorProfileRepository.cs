@@ -9,6 +9,11 @@ public sealed class InMemoryDonorProfileRepository : IDonorProfileRepository
 
     public IReadOnlyCollection<DonorProfile> DonorProfiles => _donorProfiles;
 
+    public void Reset()
+    {
+        _donorProfiles.Clear();
+    }
+
     public Task AddAsync(DonorProfile donorProfile, CancellationToken cancellationToken = default)
     {
         _donorProfiles.Add(donorProfile);

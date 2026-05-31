@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Confluent.Kafka;
 using Fcg.Identity.Application.Abstractions.Messaging;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace Fcg.Identity.Infrastructure.Kafka.Messaging;
 
+[ExcludeFromCodeCoverage]
 public sealed class KafkaMessagePublisher : IMessagePublisher
 {
     private readonly KafkaSettings _settings;

@@ -38,6 +38,7 @@ jobs:
       solution_path: Fcg.Identity.slnx
       unit_tests_path: tests/Fcg.Identity.UnitTests/Fcg.Identity.UnitTests.csproj
       integration_tests_path: tests/Fcg.Identity.IntegratedTests/Fcg.Identity.IntegratedTests.csproj
+      functional_tests_path: tests/Fcg.Identity.FunctionalTests/Fcg.Identity.FunctionalTests.csproj
       test_environment: Test
       coverage_threshold: 80
       run_sonar: true

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Fcg.Identity.IntegratedTests": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "RUN_TESTCONTAINERS": "true"
+      }
+    }
+  }
+}
