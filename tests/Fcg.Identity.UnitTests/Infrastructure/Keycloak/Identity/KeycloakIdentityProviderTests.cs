@@ -1,5 +1,7 @@
 using System.Net;
+using System.Text.Json;
 using Fcg.Identity.Application.Abstractions.Identity;
+using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.Infrastructure.Keycloak.Http;
 using Fcg.Identity.Infrastructure.Keycloak.Http.Contracts;
@@ -143,6 +145,9 @@ public sealed class KeycloakIdentityProviderTests
     {
         // Arrange
         var keycloakApi = new FakeKeycloakApi();
+        keycloakApi.LoginTokenResponse = CreateApiResponse(
+            HttpStatusCode.OK,
+            new KeycloakTokenResponse(CreateJwt("keycloak-user-id", [IdentityRoles.Donor]), "refresh-token", 300, "Bearer"));
         var provider = CreateProvider(keycloakApi);
         var request = new LoginIdentityUserRequest("maria@email.com", "StrongPassword123!");
 
@@ -151,10 +156,12 @@ public sealed class KeycloakIdentityProviderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.AccessToken.Should().Be("access-token");
+        result.Value.AccessToken.Should().NotBeNullOrWhiteSpace();
         result.Value.RefreshToken.Should().Be("refresh-token");
         result.Value.ExpiresIn.Should().Be(300);
         result.Value.TokenType.Should().Be("Bearer");
+        result.Value.KeycloakUserId.Should().Be("keycloak-user-id");
+        result.Value.Roles.Should().Contain(IdentityRoles.Donor);
     }
 
     [Fact]
@@ -254,6 +261,29 @@ public sealed class KeycloakIdentityProviderTests
             string.Empty,
             new RefitSettings(),
             error: null);
+    }
+
+    private static string CreateJwt(string subject, IReadOnlyCollection<string> roles)
+    {
+        var header = Base64UrlEncode("""{"alg":"none","typ":"JWT"}"""u8.ToArray());
+        var payload = Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            sub = subject,
+            realm_access = new
+            {
+                roles
+            }
+        }));
+
+        return $"{header}.{payload}.";
+    }
+
+    private static string Base64UrlEncode(byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 
     private sealed class FakeKeycloakApi : IKeycloakApi

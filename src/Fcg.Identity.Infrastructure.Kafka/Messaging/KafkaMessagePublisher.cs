@@ -11,6 +11,8 @@ namespace Fcg.Identity.Infrastructure.Kafka.Messaging;
 [ExcludeFromCodeCoverage]
 public sealed class KafkaMessagePublisher : IMessagePublisher
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+
     private readonly KafkaSettings _settings;
     private readonly ILogger<KafkaMessagePublisher> _logger;
 
@@ -29,7 +31,7 @@ public sealed class KafkaMessagePublisher : IMessagePublisher
         };
 
         using var producer = new ProducerBuilder<Null, string>(config).Build();
-        var payload = JsonSerializer.Serialize(message);
+        var payload = JsonSerializer.Serialize(message, SerializerOptions);
         await producer.ProduceAsync(_settings.TopicName, new Message<Null, string> { Value = payload }, cancellationToken);
         _logger.LogInformation("Published message to topic {TopicName}", _settings.TopicName);
     }

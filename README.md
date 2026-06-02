@@ -13,7 +13,7 @@ Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua 
 - Consulta do perfil autenticado (`GET /api/v1/me`).
 - Provisionamento administrativo (seed) de **GestorONG** no Keycloak e sincronização do `ManagerProfile` no `IdentityDb`.
 - Emissão de **JWT** pelo Keycloak para uso em todos os serviços com **RBAC** nas roles `GestorONG` e `Doador`.
-- Auditoria explícita de eventos relevantes em `AuditLogs`.
+- Auditoria explícita de eventos relevantes via tópico Kafka `audit-log-requested`.
 
 A aplicação **não** armazena senha nem hash de senha. As credenciais permanecem no Keycloak.
 
@@ -51,7 +51,7 @@ Roles canônicas do MVP:
 
 ```
 src/
-  Fcg.Identity.Domain/                  # DonorProfile, ManagerProfile, AuditLog, value objects
+  Fcg.Identity.Domain/                  # DonorProfile, ManagerProfile, value objects
   Fcg.Identity.Application/             # Casos de uso, CQRS, validação
   Fcg.Identity.Infrastructure.Auth/     # Validação de JWT
   Fcg.Identity.Infrastructure.Http/     # Clientes HTTP (Refit/Polly)
@@ -242,7 +242,7 @@ Namespace alvo: `fcg-identity`.
 - Engine: **SQL Server** ([ADR 0011](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0011-use-sql-server-for-service-databases.md))
 - ORM: **Entity Framework Core** ([ADR 0012](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0012-use-entity-framework-core.md))
 - Database: `IdentityDb`
-- Tabelas principais: `DonorProfiles`, `ManagerProfiles`, `AuditLogs`
+- Tabelas principais: `DonorProfiles`, `ManagerProfiles`
 
 Para aplicar as migrations:
 

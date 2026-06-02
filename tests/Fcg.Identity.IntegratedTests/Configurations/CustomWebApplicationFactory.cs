@@ -47,7 +47,6 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         dbContext.DonorProfiles.RemoveRange(dbContext.DonorProfiles);
         dbContext.ManagerProfiles.RemoveRange(dbContext.ManagerProfiles);
-        dbContext.AuditLogs.RemoveRange(dbContext.AuditLogs);
         await dbContext.SaveChangesAsync();
     }
 

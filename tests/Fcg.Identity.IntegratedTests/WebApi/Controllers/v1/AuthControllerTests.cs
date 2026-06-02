@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.UseCases.Auth.Login;
 using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcg.Identity.Application.UseCases.Donors.RegisterDonor;

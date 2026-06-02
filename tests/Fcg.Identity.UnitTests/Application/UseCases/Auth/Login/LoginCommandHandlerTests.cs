@@ -1,6 +1,9 @@
 using Fcg.Identity.Application.Abstractions.Identity;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Application.UseCases.Auth.Login;
+using Fcg.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
+using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,10 +17,27 @@ public sealed class LoginCommandHandlerTests
     {
         // Arrange
         var identityProvider = new FakeIdentityProvider();
-        identityProvider.ConfigureLoginResult(new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer"));
-        var auditLogRepository = new InMemoryAuditLogRepository();
-        var unitOfWork = new FakeUnitOfWork();
-        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork, NullLogger<LoginCommandHandler>.Instance);
+        const string keycloakUserId = "keycloak-donor-id";
+        identityProvider.ConfigureLoginResult(new LoginIdentityUserResponse(
+            "access-token",
+            "refresh-token",
+            300,
+            "Bearer",
+            keycloakUserId,
+            [IdentityRoles.Donor]));
+        var messagePublisher = new FakeMessagePublisher();
+        var donorProfileRepository = new InMemoryDonorProfileRepository();
+        var donorProfile = new DonorProfileBuilder()
+            .WithKeycloakUserId(keycloakUserId)
+            .WithEmail("doador@email.com")
+            .Build();
+        await donorProfileRepository.AddAsync(donorProfile);
+        var handler = new LoginCommandHandler(
+            identityProvider,
+            messagePublisher,
+            donorProfileRepository,
+            new InMemoryManagerProfileRepository(),
+            NullLogger<LoginCommandHandler>.Instance);
         var command = new LoginCommand("doador@email.com", "Password123!");
 
         // Act
@@ -31,8 +51,11 @@ public sealed class LoginCommandHandlerTests
         result.Value.TokenType.Should().Be("Bearer");
         identityProvider.LoginCalls.Should().Be(1);
         identityProvider.LastLoginRequest.Should().BeEquivalentTo(new LoginIdentityUserRequest(command.Email, command.Password));
-        auditLogRepository.AuditLogs.Should().ContainSingle(auditLog => auditLog.Action == "LoginSucceeded");
-        unitOfWork.SaveChangesCalls.Should().Be(1);
+        var auditMessage = await messagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
+        auditMessage.Action.Should().Be(AuditActions.LoginSucceeded);
+        auditMessage.EntityName.Should().Be("Authentication");
+        auditMessage.ActorId.Should().Be(donorProfile.Id);
+        auditMessage.ActorType.Should().Be(IdentityRoles.Donor);
     }
 
     [Fact]
@@ -41,9 +64,13 @@ public sealed class LoginCommandHandlerTests
         // Arrange
         var identityProvider = new FakeIdentityProvider();
         identityProvider.ConfigureLoginResult(Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password."));
-        var auditLogRepository = new InMemoryAuditLogRepository();
-        var unitOfWork = new FakeUnitOfWork();
-        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork, NullLogger<LoginCommandHandler>.Instance);
+        var messagePublisher = new FakeMessagePublisher();
+        var handler = new LoginCommandHandler(
+            identityProvider,
+            messagePublisher,
+            new InMemoryDonorProfileRepository(),
+            new InMemoryManagerProfileRepository(),
+            NullLogger<LoginCommandHandler>.Instance);
         var command = new LoginCommand("doador@email.com", "wrong-password");
 
         // Act
@@ -53,7 +80,9 @@ public sealed class LoginCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("IdentityProvider.InvalidCredentials");
         identityProvider.LoginCalls.Should().Be(1);
-        auditLogRepository.AuditLogs.Should().ContainSingle(auditLog => auditLog.Action == "LoginFailed");
-        unitOfWork.SaveChangesCalls.Should().Be(1);
+        var auditMessage = await messagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
+        auditMessage.Action.Should().Be(AuditActions.LoginFailed);
+        auditMessage.EntityName.Should().Be("Authentication");
+        auditMessage.ActorType.Should().Be("Public");
     }
 }

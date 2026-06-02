@@ -1,4 +1,5 @@
 using Fcg.Identity.Application.Abstractions.Identity;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
 using Fcg.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcg.Identity.CommomTestsUtilities.Builders.Donors;
@@ -16,10 +17,10 @@ public sealed class RegisterDonorCommandHandlerTests
     {
         // Arrange
         var donorProfileRepository = new InMemoryDonorProfileRepository();
-        var auditLogRepository = new InMemoryAuditLogRepository();
+        var messagePublisher = new FakeMessagePublisher();
         var identityProvider = new FakeIdentityProvider();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = CreateHandler(donorProfileRepository, auditLogRepository, identityProvider, unitOfWork);
+        var handler = CreateHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
         var command = new RegisterDonorCommandBuilder().Build();
 
         // Act
@@ -32,7 +33,10 @@ public sealed class RegisterDonorCommandHandlerTests
         result.Value.Email.Should().Be(command.Email);
         result.Value.Cpf.Should().Contain("*");
         donorProfileRepository.DonorProfiles.Should().ContainSingle();
-        auditLogRepository.AuditLogs.Should().ContainSingle(auditLog => auditLog.Action == "DonorRegistered");
+        var auditMessage = await messagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
+        auditMessage.Action.Should().Be(AuditActions.DonorRegistered);
+        auditMessage.EntityName.Should().Be("DonorProfile");
+        auditMessage.ActorType.Should().Be("Doador");
         identityProvider.CreateDonorCalls.Should().Be(1);
         identityProvider.LastCreateDonorRequest.Should().BeEquivalentTo(new CreateDonorIdentityUserRequest(command.FullName, command.Email, command.Password));
         unitOfWork.SaveChangesCalls.Should().Be(1);
@@ -45,10 +49,10 @@ public sealed class RegisterDonorCommandHandlerTests
         var existingDonorProfile = new DonorProfileBuilder().Build();
         var donorProfileRepository = new InMemoryDonorProfileRepository();
         await donorProfileRepository.AddAsync(existingDonorProfile);
-        var auditLogRepository = new InMemoryAuditLogRepository();
+        var messagePublisher = new FakeMessagePublisher();
         var identityProvider = new FakeIdentityProvider();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = CreateHandler(donorProfileRepository, auditLogRepository, identityProvider, unitOfWork);
+        var handler = CreateHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
         var command = new RegisterDonorCommandBuilder()
             .WithEmail(existingDonorProfile.Email.Value)
             .Build();
@@ -70,10 +74,10 @@ public sealed class RegisterDonorCommandHandlerTests
         var existingDonorProfile = new DonorProfileBuilder().Build();
         var donorProfileRepository = new InMemoryDonorProfileRepository();
         await donorProfileRepository.AddAsync(existingDonorProfile);
-        var auditLogRepository = new InMemoryAuditLogRepository();
+        var messagePublisher = new FakeMessagePublisher();
         var identityProvider = new FakeIdentityProvider();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = CreateHandler(donorProfileRepository, auditLogRepository, identityProvider, unitOfWork);
+        var handler = CreateHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
         var command = new RegisterDonorCommandBuilder()
             .WithCpf(existingDonorProfile.Cpf.Value)
             .Build();
@@ -93,11 +97,11 @@ public sealed class RegisterDonorCommandHandlerTests
     {
         // Arrange
         var donorProfileRepository = new InMemoryDonorProfileRepository();
-        var auditLogRepository = new InMemoryAuditLogRepository();
+        var messagePublisher = new FakeMessagePublisher();
         var identityProvider = new FakeIdentityProvider();
         identityProvider.ConfigureCreateDonorResult(Error.Failure("IdentityProvider.CreateUserFailed", "Could not create user."));
         var unitOfWork = new FakeUnitOfWork();
-        var handler = CreateHandler(donorProfileRepository, auditLogRepository, identityProvider, unitOfWork);
+        var handler = CreateHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
         var command = new RegisterDonorCommandBuilder().Build();
 
         // Act
@@ -112,13 +116,13 @@ public sealed class RegisterDonorCommandHandlerTests
 
     private static RegisterDonorCommandHandler CreateHandler(
         InMemoryDonorProfileRepository donorProfileRepository,
-        InMemoryAuditLogRepository auditLogRepository,
+        FakeMessagePublisher messagePublisher,
         FakeIdentityProvider identityProvider,
         FakeUnitOfWork unitOfWork)
     {
         return new RegisterDonorCommandHandler(
             donorProfileRepository,
-            auditLogRepository,
+            messagePublisher,
             identityProvider,
             unitOfWork,
             NullLogger<RegisterDonorCommandHandler>.Instance);

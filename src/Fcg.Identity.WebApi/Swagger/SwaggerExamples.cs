@@ -29,7 +29,7 @@ public static class SwaggerExamples
 
     public static object TokenSuccess => Success(new
     {
-        accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        accessToken = "example-access-token",
         refreshToken = "refresh-token",
         expiresIn = 300,
         tokenType = "Bearer"

@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.AuditLogs;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence;
@@ -21,7 +20,6 @@ public static class DependencyInjection
 
         services.AddScoped<IDonorProfileRepository, DonorProfileRepository>();
         services.AddScoped<IManagerProfileRepository, ManagerProfileRepository>();
-        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<FcgIdentityDbContext>());
         services.AddHealthChecks().AddDbContextCheck<FcgIdentityDbContext>("sqlserver");
 

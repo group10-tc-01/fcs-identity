@@ -1,7 +1,7 @@
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.AuditLogs;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.Shared.Results;
 using Microsoft.Extensions.Logging;
@@ -11,20 +11,20 @@ namespace Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
 public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorCommand, RegisterDonorResponse>
 {
     private readonly IDonorProfileRepository _donorProfileRepository;
-    private readonly IAuditLogRepository _auditLogRepository;
+    private readonly IMessagePublisher _messagePublisher;
     private readonly IIdentityProvider _identityProvider;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<RegisterDonorCommandHandler> _logger;
 
     public RegisterDonorCommandHandler(
         IDonorProfileRepository donorProfileRepository,
-        IAuditLogRepository auditLogRepository,
+        IMessagePublisher messagePublisher,
         IIdentityProvider identityProvider,
         IUnitOfWork unitOfWork,
         ILogger<RegisterDonorCommandHandler> logger)
     {
         _donorProfileRepository = donorProfileRepository;
-        _auditLogRepository = auditLogRepository;
+        _messagePublisher = messagePublisher;
         _identityProvider = identityProvider;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -98,15 +98,15 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
             donorProfile.KeycloakUserId);
 
         await _donorProfileRepository.AddAsync(donorProfile, cancellationToken);
-        await _auditLogRepository.AddAsync(
-            AuditLog.Create(
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _messagePublisher.PublishAuditLogFireAndForget(
+            AuditLogRequestedEvent.Create(
                 AuditActions.DonorRegistered,
                 nameof(DonorProfile),
                 actorId: donorProfile.Id,
                 actorType: "Doador",
-                entityId: donorProfile.Id.ToString()).Value,
-            cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                entityId: donorProfile.Id.ToString()));
 
         _logger.LogInformation(
             "Register donor flow completed. DonorProfileId: {DonorProfileId}. Email: {Email}",

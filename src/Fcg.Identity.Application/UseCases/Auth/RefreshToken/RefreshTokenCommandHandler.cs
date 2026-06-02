@@ -1,8 +1,9 @@
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Application.UseCases.Auth.Login;
-using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.AuditLogs;
+using Fcg.Identity.Domain.DonorProfiles;
+using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Domain.Shared.Results;
 using Microsoft.Extensions.Logging;
 
@@ -11,19 +12,22 @@ namespace Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 public sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, LoginResponse>
 {
     private readonly IIdentityProvider _identityProvider;
-    private readonly IAuditLogRepository _auditLogRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMessagePublisher _messagePublisher;
+    private readonly IDonorProfileRepository _donorProfileRepository;
+    private readonly IManagerProfileRepository _managerProfileRepository;
     private readonly ILogger<RefreshTokenCommandHandler> _logger;
 
     public RefreshTokenCommandHandler(
         IIdentityProvider identityProvider,
-        IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork,
+        IMessagePublisher messagePublisher,
+        IDonorProfileRepository donorProfileRepository,
+        IManagerProfileRepository managerProfileRepository,
         ILogger<RefreshTokenCommandHandler> logger)
     {
         _identityProvider = identityProvider;
-        _auditLogRepository = auditLogRepository;
-        _unitOfWork = unitOfWork;
+        _messagePublisher = messagePublisher;
+        _donorProfileRepository = donorProfileRepository;
+        _managerProfileRepository = managerProfileRepository;
         _logger = logger;
     }
 
@@ -45,11 +49,23 @@ public sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCom
             return refreshResult.Error;
         }
 
-        _logger.LogInformation("Refresh token flow succeeded. Persisting audit log");
-        await _auditLogRepository.AddAsync(
-            AuditLog.Create(AuditActions.TokenRefreshed, "Authentication", actorType: "Public").Value,
+        var actor = await AuditActorResolver.ResolveAsync(
+            refreshResult.Value,
+            _donorProfileRepository,
+            _managerProfileRepository,
             cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Refresh token flow succeeded. Publishing audit log. ActorId: {ActorId}. ActorType: {ActorType}",
+            actor.ActorId,
+            actor.ActorType);
+
+        _messagePublisher.PublishAuditLogFireAndForget(
+            AuditLogRequestedEvent.Create(
+                AuditActions.TokenRefreshed,
+                "Authentication",
+                actor.ActorId,
+                actor.ActorType));
 
         _logger.LogInformation(
             "Refresh token flow completed. TokenType: {TokenType}. ExpiresIn: {ExpiresIn}",

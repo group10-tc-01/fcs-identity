@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
@@ -382,11 +383,104 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             return Error.Failure("IdentityProvider.TokenMissing", "The identity provider did not return an access token.");
         }
 
+        var tokenIdentity = ExtractTokenIdentity(tokenResponse.AccessToken);
+
         return new LoginIdentityUserResponse(
             tokenResponse.AccessToken,
             tokenResponse.RefreshToken ?? string.Empty,
             tokenResponse.ExpiresIn,
-            tokenResponse.TokenType);
+            tokenResponse.TokenType,
+            tokenIdentity.KeycloakUserId,
+            tokenIdentity.Roles);
+    }
+
+    private static TokenIdentity ExtractTokenIdentity(string accessToken)
+    {
+        try
+        {
+            var parts = accessToken.Split('.');
+            if (parts.Length < 2)
+            {
+                return TokenIdentity.Empty;
+            }
+
+            using var payload = JsonDocument.Parse(Base64UrlDecode(parts[1]));
+            var root = payload.RootElement;
+            var keycloakUserId = root.TryGetProperty("sub", out var subject) && subject.ValueKind == JsonValueKind.String
+                ? subject.GetString()
+                : null;
+
+            var roles = new List<string>();
+            AddRoles(root, "roles", roles);
+            AddRoles(root, "role", roles);
+
+            if (root.TryGetProperty("realm_access", out var realmAccess) && realmAccess.ValueKind == JsonValueKind.Object)
+            {
+                AddRoles(realmAccess, "roles", roles);
+            }
+
+            return new TokenIdentity(keycloakUserId, roles.Distinct(StringComparer.Ordinal).ToArray());
+        }
+        catch (FormatException)
+        {
+            return TokenIdentity.Empty;
+        }
+        catch (JsonException)
+        {
+            return TokenIdentity.Empty;
+        }
+    }
+
+    private static void AddRoles(JsonElement root, string propertyName, ICollection<string> roles)
+    {
+        if (!root.TryGetProperty(propertyName, out var property))
+        {
+            return;
+        }
+
+        if (property.ValueKind == JsonValueKind.String)
+        {
+            var role = property.GetString();
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                roles.Add(role);
+            }
+
+            return;
+        }
+
+        if (property.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (var role in property.EnumerateArray())
+        {
+            if (role.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(role.GetString()))
+            {
+                roles.Add(role.GetString()!);
+            }
+        }
+    }
+
+    private static byte[] Base64UrlDecode(string value)
+    {
+        var base64 = value
+            .Replace('-', '+')
+            .Replace('_', '/');
+
+        var padding = base64.Length % 4;
+        if (padding > 0)
+        {
+            base64 = base64.PadRight(base64.Length + 4 - padding, '=');
+        }
+
+        return Convert.FromBase64String(base64);
+    }
+
+    private sealed record TokenIdentity(string? KeycloakUserId, IReadOnlyCollection<string> Roles)
+    {
+        public static TokenIdentity Empty { get; } = new(null, []);
     }
 
     private static (string FirstName, string LastName) SplitFullName(string fullName)

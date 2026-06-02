@@ -2,7 +2,6 @@ using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
 using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.AuditLogs;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.FunctionalTests.Support;
@@ -22,7 +21,6 @@ public sealed class FunctionalWebApplicationFactory : WebApplicationFactory<Prog
     public FakeIdentityProvider IdentityProvider { get; } = new();
     public InMemoryDonorProfileRepository DonorProfileRepository { get; } = new();
     public InMemoryManagerProfileRepository ManagerProfileRepository { get; } = new();
-    public InMemoryAuditLogRepository AuditLogRepository { get; } = new();
     public FakeUnitOfWork UnitOfWork { get; } = new();
     public FakeMessagePublisher MessagePublisher { get; } = new();
 
@@ -31,7 +29,6 @@ public sealed class FunctionalWebApplicationFactory : WebApplicationFactory<Prog
         IdentityProvider.Reset();
         DonorProfileRepository.Reset();
         ManagerProfileRepository.Reset();
-        AuditLogRepository.Reset();
         UnitOfWork.Reset();
         MessagePublisher.Reset();
     }
@@ -46,14 +43,12 @@ public sealed class FunctionalWebApplicationFactory : WebApplicationFactory<Prog
             services.RemoveAll<FcgIdentityDbContext>();
             services.RemoveAll<IDonorProfileRepository>();
             services.RemoveAll<IManagerProfileRepository>();
-            services.RemoveAll<IAuditLogRepository>();
             services.RemoveAll<IUnitOfWork>();
             services.RemoveAll<IIdentityProvider>();
             services.RemoveAll<IMessagePublisher>();
 
             services.AddSingleton<IDonorProfileRepository>(DonorProfileRepository);
             services.AddSingleton<IManagerProfileRepository>(ManagerProfileRepository);
-            services.AddSingleton<IAuditLogRepository>(AuditLogRepository);
             services.AddSingleton<IUnitOfWork>(UnitOfWork);
             services.AddSingleton<IIdentityProvider>(IdentityProvider);
             services.AddSingleton<IMessagePublisher>(MessagePublisher);

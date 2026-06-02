@@ -1,5 +1,6 @@
 using Fcg.Identity.Application.Abstractions.Authentication;
 using Fcg.Identity.Application.Abstractions.Messaging;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Domain.Shared;
@@ -13,17 +14,20 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
     private readonly ICurrentUser _currentUser;
     private readonly IDonorProfileRepository _donorProfileRepository;
     private readonly IManagerProfileRepository _managerProfileRepository;
+    private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<GetMeQueryHandler> _logger;
 
     public GetMeQueryHandler(
         ICurrentUser currentUser,
         IDonorProfileRepository donorProfileRepository,
         IManagerProfileRepository managerProfileRepository,
+        IMessagePublisher messagePublisher,
         ILogger<GetMeQueryHandler> logger)
     {
         _currentUser = currentUser;
         _donorProfileRepository = donorProfileRepository;
         _managerProfileRepository = managerProfileRepository;
+        _messagePublisher = messagePublisher;
         _logger = logger;
     }
 
@@ -52,6 +56,8 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
                 return Error.NotFound("Profile.NotFound", "Profile was not found.");
             }
 
+            PublishProfileViewedAudit(nameof(DonorProfile), donorProfile.Id, IdentityRoles.Donor);
+
             _logger.LogInformation(
                 "Get current profile flow completed for donor. DonorProfileId: {DonorProfileId}",
                 donorProfile.Id);
@@ -75,6 +81,8 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
                 return Error.NotFound("Profile.NotFound", "Profile was not found.");
             }
 
+            PublishProfileViewedAudit(nameof(ManagerProfile), managerProfile.Id, IdentityRoles.Manager);
+
             _logger.LogInformation(
                 "Get current profile flow completed for manager. ManagerProfileId: {ManagerProfileId}",
                 managerProfile.Id);
@@ -92,5 +100,22 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
             _currentUser.Roles);
 
         return Error.Unauthorized("CurrentUser.RoleNotAllowed", "User role is not allowed.");
+    }
+
+    private void PublishProfileViewedAudit(string entityName, Guid profileId, string actorType)
+    {
+        _logger.LogInformation(
+            "Publishing profile viewed audit log. EntityName: {EntityName}. ProfileId: {ProfileId}. ActorType: {ActorType}",
+            entityName,
+            profileId,
+            actorType);
+
+        _messagePublisher.PublishAuditLogFireAndForget(
+            AuditLogRequestedEvent.Create(
+                AuditActions.ProfileViewed,
+                entityName,
+                profileId,
+                actorType,
+                profileId.ToString()));
     }
 }
