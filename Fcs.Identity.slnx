@@ -23,9 +23,6 @@
   <Folder Name="/src/3 - WebApi/">
     <Project Path="src/Fcs.Identity.WebApi/Fcs.Identity.WebApi.csproj" />
   </Folder>
-  <Folder Name="/src/4 - Resource/">
-    <Project Path="src/Fcs.Identity.Resources/Fcs.Identity.Resources.csproj" />
-  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Fcs.Identity.ArchitectureTests/Fcs.Identity.ArchitectureTests.csproj" />
     <Project Path="tests/Fcs.Identity.CommomTestsUtilities/Fcs.Identity.CommomTestsUtilities.csproj" />
