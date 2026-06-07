@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
+    <File Path=".gitleaks.toml" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="docker-compose.yml" />
@@ -10,7 +11,9 @@
   <Folder Name="/src/" />
   <Folder Name="/src/0 - Domain/">
     <Project Path="src/Fcs.Identity.Domain/Fcs.Identity.Domain.csproj" />
-    <Project Path="src/Fcs.Identity.Resources/Fcs.Identity.Resources.csproj" />
+    <Project Path="src/Fcs.Identity.Resources/Fcs.Identity.Resources.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/src/1 - Application/">
     <Project Path="src/Fcs.Identity.Application/Fcs.Identity.Application.csproj" />

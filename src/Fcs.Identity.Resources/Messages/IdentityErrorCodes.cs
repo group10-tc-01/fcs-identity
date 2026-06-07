@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Fcs.Identity.Resources.Messages;
 
+[ExcludeFromCodeCoverage]
 public static class IdentityErrorCodes
 {
     public const string CpfInvalid = "Cpf.Invalid";

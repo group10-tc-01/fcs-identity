@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Fcs.Identity.Resources.Messages;
 
+[ExcludeFromCodeCoverage]
 public static class IdentityMessages
 {
     public const string CpfInvalid = "CPF is invalid.";

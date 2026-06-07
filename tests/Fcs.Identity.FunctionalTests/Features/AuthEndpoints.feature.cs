@@ -26,8 +26,8 @@ namespace Fcs.Identity.FunctionalTests.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-br"), "Features", "Endpoints de autenticação", ("  Para acessar a plataforma Conexão Solidária\n  Como usuário da API de identidade" +
-                "\n  Quero registrar doadores e autenticar usuários"), global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-br"), "Features", "Endpoints de autenticação", "  Para acessar a plataforma Conexão Solidária\r\n  Como usuário da API de identidad" +
+                "e\r\n  Quero registrar doadores e autenticar usuários", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
