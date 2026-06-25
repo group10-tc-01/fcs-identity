@@ -70,7 +70,7 @@ public sealed class ManagerSeederTests
             profile.FullName == dependencies.Settings.FullName &&
             profile.Email.Value == dependencies.Settings.Email);
         dependencies.UnitOfWork.SaveChangesCalls.Should().Be(1);
-        var auditEvent = dependencies.MessagePublisher.PublishedMessages.OfType<AuditLogRequestedEvent>().Single();
+        var auditEvent = await dependencies.MessagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
         auditEvent.Action.Should().Be(AuditActions.ManagerSeeded);
         auditEvent.EntityName.Should().Be(nameof(ManagerProfile));
         auditEvent.Metadata.Should().ContainKey("email");
