@@ -87,7 +87,7 @@ public sealed class ManagerSeeder : IManagerSeeder
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _messagePublisher.PublishAsync(
+        _messagePublisher.PublishAuditLogFireAndForget(
             AuditLogRequestedEvent.Create(
                 AuditActions.ManagerSeeded,
                 nameof(ManagerProfile),
@@ -96,8 +96,7 @@ public sealed class ManagerSeeder : IManagerSeeder
                 {
                     ["email"] = _settings.Email,
                     ["keycloakUserId"] = keycloakUserId
-                }),
-            cancellationToken);
+                }));
 
         _logger.LogInformation(
             "Manager seed completed. ManagerProfileId: {ManagerProfileId}. KeycloakUserId: {KeycloakUserId}",
