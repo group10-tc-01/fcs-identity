@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Fcs.Identity.WebApi.Swagger;
@@ -23,14 +23,7 @@ public sealed class SwaggerAuthorizationOperationFilter : IOperationFilter
             new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = SwaggerConstants.BearerSecurityScheme
-                        }
-                    },
+                    new OpenApiSecuritySchemeReference(SwaggerConstants.BearerSecurityScheme, context.Document, null),
                     []
                 }
             }
