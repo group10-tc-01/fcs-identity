@@ -20,7 +20,7 @@ public class ProjectStructureTests
 
     [Theory]
     [MemberData(nameof(ProductionProjects))]
-    public void Given_ProductionProject_When_ProjectFileIsValidated_Then_ShouldTargetNet8(string relativeProjectPath)
+    public void Given_ProductionProject_When_ProjectFileIsValidated_Then_ShouldTargetNet10(string relativeProjectPath)
     {
         // Arrange
         var projectPath = Path.Combine(RepositoryRoot, relativeProjectPath);
@@ -29,7 +29,7 @@ public class ProjectStructureTests
         var targetFramework = GetTargetFramework(projectPath);
 
         // Assert
-        targetFramework.Should().Be("net8.0", "Fase 05 backend services are standardized on .NET 8");
+        targetFramework.Should().Be("net10.0", "Fase 05 backend services are standardized on .NET 10");
     }
 
     [Fact]
