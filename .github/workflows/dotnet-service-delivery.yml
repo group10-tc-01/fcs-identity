@@ -1,4 +1,4 @@
-name: Fcs.Identity Delivery To AKS
+name: Fcs.Identity Delivery To Coolify
 
 on:
   workflow_run:
@@ -9,24 +9,20 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  packages: write
 
 jobs:
   deploy:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    uses: group10-tc-01/fcs-pipelines/.github/workflows/dotnet-service-delivery.yml@main
+    uses: group10-tc-01/fcs-pipelines/.github/workflows/coolify-image-delivery.yml@main
     with:
-      service_name: fcs-identity
+      app_name: fcs-identity
+      source_ref: ${{ github.event.workflow_run.head_sha }}
+      image_registry: ghcr.io
+      image_owner: group10-tc-01
       image_name: fcs-identity
       dockerfile_path: src/Fcs.Identity.WebApi/Dockerfile
       docker_context: .
-      azure_container_registry_name: ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}
-      aks_resource_group: ${{ vars.AKS_RESOURCE_GROUP }}
-      aks_cluster_name: ${{ vars.AKS_CLUSTER_NAME }}
-      k8s_namespace: fcs-identity
-      k8s_deployment_name: fcs-identity
-      k8s_container_name: fcs-identity
-      k8s_manifests_path: ""
-      environment: production
-      healthcheck_url: ""
+      coolify_base_url: ${{ vars.COOLIFY_BASE_URL }}
+      coolify_resource_uuid: ${{ vars.COOLIFY_RESOURCE_UUID }}
     secrets: inherit
