@@ -213,7 +213,7 @@ Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/g
   - `GET /health`
   - `GET /metrics`
 
-Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Em ambiente local são consumidos pelo `Prometheus`/`Grafana` que rodam em `fcs-solidarity-infra`.
+Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Na VPS, o `/health` é usado pelas probes do Kubernetes e o Datadog Agent consome `/metrics` e `/health` por Autodiscovery dentro da rede do pod; nenhum deles precisa de Ingress público.
 
 ---
 
@@ -231,7 +231,7 @@ Gates principais: secret scan (Gitleaks), dependency scan, restore/build, testes
 
 ## Kubernetes
 
-Manifests Kubernetes deste serviço (Deployment, Service, ConfigMap, Secret) ficam em `k8s/` (ou diretório equivalente neste repositório). Para o ambiente integrado (Kind local ou AKS), com Keycloak, Kafka, Prometheus e Grafana compartilhados, consulte o repositório `fcs-solidarity-infra` ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
+O `deployment.yaml` deste serviço permanece em `k8s/` e contém as anotações de Autodiscovery do Datadog. Os recursos compartilhados (Agent/Cluster Agent, Keycloak, Kafka e bancos) são gerenciados pelo `fcs-infra`; Secrets de produção não são versionados neste repositório ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
 
 Namespace alvo: `fcs-identity`.
 
