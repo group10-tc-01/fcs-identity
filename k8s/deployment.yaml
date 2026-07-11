@@ -16,6 +16,10 @@ spec:
       labels:
         app.kubernetes.io/name: fcs-identity
         app.kubernetes.io/part-of: fcs
+      annotations:
+        fcs.platform/deployed-at: not-deployed
+        fcs.platform/source-sha: not-deployed
+        fcs.platform/image: not-deployed
     spec:
       containers:
         - name: api
@@ -43,6 +47,18 @@ spec:
                 secretKeyRef:
                   name: identity-runtime
                   key: ManagerSeed__Password
+            - name: Deployment__DeployedAt
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['fcs.platform/deployed-at']
+            - name: Deployment__SourceSha
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['fcs.platform/source-sha']
+            - name: Deployment__Image
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['fcs.platform/image']
           resources:
             requests:
               cpu: 100m
