@@ -16,10 +16,36 @@ spec:
       labels:
         app.kubernetes.io/name: fcs-identity
         app.kubernetes.io/part-of: fcs
+        tags.datadoghq.com/service: fcs-identity
+        tags.datadoghq.com/env: production
       annotations:
         fcs.platform/deployed-at: not-deployed
         fcs.platform/source-sha: not-deployed
         fcs.platform/image: not-deployed
+        ad.datadoghq.com/api.checks: |
+          {
+            "openmetrics": {
+              "init_config": {},
+              "instances": [
+                {
+                  "openmetrics_endpoint": "http://%%host%%:%%port%%/metrics",
+                  "namespace": "fcs_identity",
+                  "metrics": [".*"]
+                }
+              ]
+            },
+            "http_check": {
+              "init_config": {},
+              "instances": [
+                {
+                  "name": "fcs-identity-health",
+                  "url": "http://%%host%%:%%port%%/health",
+                  "timeout": 5,
+                  "collect_response_time": true
+                }
+              ]
+            }
+          }
     spec:
       containers:
         - name: api
