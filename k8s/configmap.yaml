@@ -19,7 +19,7 @@ data:
   Keycloak__Retry__BaseDelayMilliseconds: "200"
   ManagerSeed__Enabled: "true"
   ManagerSeed__FullName: Gestor ONG
-  ManagerSeed__Email: gestor123@teste.com
+  ManagerSeed__Email: gestor@ong.test
   Cors__AllowedOrigins__0: https://fcs-web.flaviojcf.com.br
   Observability__ServiceName: Fcs.Identity
   Observability__EnableOtlpExporter: "false"

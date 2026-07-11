@@ -3,26 +3,10 @@ name: Fcs.Identity CI
 on:
   pull_request:
     branches: [main]
-    paths:
-      - src/**
-      - tests/**
-      - Directory.Build.props
-      - Directory.Packages.props
-      - .editorconfig
-      - .gitleaks.toml
-      - docker-compose.yml
-      - .github/workflows/dotnet-service-ci.yml
+
   push:
     branches: [main]
-    paths:
-      - src/**
-      - tests/**
-      - Directory.Build.props
-      - Directory.Packages.props
-      - .editorconfig
-      - .gitleaks.toml
-      - docker-compose.yml
-      - .github/workflows/dotnet-service-ci.yml
+
   workflow_dispatch:
 
 permissions:

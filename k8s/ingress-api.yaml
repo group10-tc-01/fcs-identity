@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: fcs-identity
+  name: fcs-identity-api
   namespace: fcs-identity
 spec:
   ingressClassName: fcs-traefik
@@ -10,13 +10,6 @@ spec:
       http:
         paths:
           - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: fcs-identity-service
-                port:
-                  number: 8080
-          - path: /swagger
             pathType: Prefix
             backend:
               service:
