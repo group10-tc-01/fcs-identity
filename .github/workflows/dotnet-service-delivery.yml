@@ -21,5 +21,6 @@ jobs:
       k8s_namespace: fcs-identity
       k8s_deployment_name: fcs-identity
       k8s_container_name: api
+      k8s_manifest_path: k8s/deployment.yaml
       environment: production
     secrets: inherit
