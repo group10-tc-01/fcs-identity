@@ -134,7 +134,7 @@ O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais A
 
 ## Pré-requisitos
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Docker](https://docs.docker.com/get-docker/) e Docker Compose
 - Portas livres no host: `1433` (SQL Server), `8081` (Keycloak), `9092` (Kafka), `5341` (Seq), `8080` (API).
 
@@ -223,7 +223,7 @@ A esteira está em `.github/workflows/` reutilizando os workflows reutilizáveis
 
 - `branch-name-check.yml` — política de nomes de branch
 - `dotnet-service-ci.yml` — build .NET, testes, SonarCloud, Trivy, build da imagem Docker
-- `dotnet-service-delivery.yml` — push da imagem para Azure Container Registry e deploy em AKS
+- `dotnet-service-delivery.yml` — entrega da imagem imutável no K3s da VPS
 
 Gates principais: secret scan (Gitleaks), dependency scan, restore/build, testes com cobertura mínima de 80%, SonarCloud, Docker build, Trivy, deploy condicional, healthcheck pós-rollout.
 

@@ -15,7 +15,11 @@ public static class PipelineDependencyInjection
         logger.LogInformation("Application started successfully");
         logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
 
-        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
+        var applyMigrations = app.Environment.IsDevelopment()
+            || app.Environment.EnvironmentName == "Docker"
+            || app.Configuration.GetValue<bool>("Database:ApplyMigrations");
+
+        if (applyMigrations)
         {
             app.ApplyMigrations();
             logger.LogInformation("Migrations applied");
@@ -40,7 +44,10 @@ public static class PipelineDependencyInjection
         });
         app.MapPrometheusScrapingEndpoint("/metrics");
 
-        if (!app.Environment.IsDevelopment() && app.Environment.EnvironmentName != "Docker")
+        var enableHttpsRedirection = app.Configuration.GetValue("HttpsRedirection:Enabled", true);
+        if (!app.Environment.IsDevelopment()
+            && app.Environment.EnvironmentName != "Docker"
+            && enableHttpsRedirection)
         {
             app.UseHttpsRedirection();
         }

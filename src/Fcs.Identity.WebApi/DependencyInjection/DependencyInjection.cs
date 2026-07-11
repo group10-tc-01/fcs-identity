@@ -42,7 +42,7 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void AddSwaggerConfiguration(this IServiceCollection services, IConfiguration configuration) => services.AddIdentitySwagger();
+    private static void AddSwaggerConfiguration(this IServiceCollection services, IConfiguration configuration) => services.AddIdentitySwagger(configuration);
 
     private static void AddManagerSeed(this IServiceCollection services, IConfiguration configuration)
     {

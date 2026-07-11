@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fcs-identity
+  namespace: fcs-identity
+  labels:
+    app.kubernetes.io/name: fcs-identity
+    app.kubernetes.io/part-of: fcs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fcs-identity
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fcs-identity
+        app.kubernetes.io/part-of: fcs
+      annotations:
+        fcs.platform/deployed-at: not-deployed
+        fcs.platform/source-sha: not-deployed
+        fcs.platform/image: not-deployed
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/group10-tc-01/fcs-identity:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: identity-config
+          env:
+            - name: ConnectionStrings__SqlServer
+              valueFrom:
+                secretKeyRef:
+                  name: identity-runtime
+                  key: ConnectionStrings__SqlServer
+            - name: Keycloak__AdminPassword
+              valueFrom:
+                secretKeyRef:
+                  name: identity-runtime
+                  key: Keycloak__AdminPassword
+            - name: ManagerSeed__Password
+              valueFrom:
+                secretKeyRef:
+                  name: identity-runtime
+                  key: ManagerSeed__Password
+            - name: Deployment__DeployedAt
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['fcs.platform/deployed-at']
+            - name: Deployment__SourceSha
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['fcs.platform/source-sha']
+            - name: Deployment__Image
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['fcs.platform/image']
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
