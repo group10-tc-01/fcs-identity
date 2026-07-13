@@ -240,6 +240,8 @@ gerenciados pelo `fcs-infra`; valores de produção não são versionados neste
 repositório ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
 
 Namespace alvo: `fcs-identity`.
+Ele é criado e mantido pelo `fcs-infra`; por isso o Kustomize da aplicação não
+tenta recriá-lo.
 
 O Swagger não recebe Ingress público na VPS; use `kubectl port-forward` quando
 precisar acessá-lo operacionalmente. O endpoint público é
