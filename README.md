@@ -224,6 +224,7 @@ A esteira está em `.github/workflows/` reutilizando os workflows reutilizáveis
 - `branch-name-check.yml` — política de nomes de branch
 - `dotnet-service-ci.yml` — build .NET, testes, SonarCloud, Trivy, build da imagem Docker
 - `dotnet-service-delivery.yml` — entrega da imagem imutável no K3s da VPS
+  por runner GitHub hospedado, através de túnel SSH privado para a API K3s
 
 Gates principais: secret scan (Gitleaks), dependency scan, restore/build, testes com cobertura mínima de 80%, SonarCloud, Docker build, Trivy, deploy condicional, healthcheck pós-rollout.
 
@@ -231,9 +232,36 @@ Gates principais: secret scan (Gitleaks), dependency scan, restore/build, testes
 
 ## Kubernetes
 
-O `deployment.yaml` deste serviço permanece em `k8s/` e contém as anotações de Autodiscovery do Datadog. Os recursos compartilhados (Agent/Cluster Agent, Keycloak, Kafka e bancos) são gerenciados pelo `fcs-infra`; Secrets de produção não são versionados neste repositório ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
+O `k8s/kustomization.yaml` aplica todos os recursos proprietários do serviço:
+Deployment, ConfigMap, Service, RBAC, Ingress HTTPS, Certificate e o
+`InfisicalStaticSecret` que gera `identity-runtime`. Os recursos compartilhados
+(Traefik, cert-manager, Infisical Operator, Keycloak, Kafka e bancos) são
+gerenciados pelo `fcs-infra`; valores de produção não são versionados neste
+repositório ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
 
 Namespace alvo: `fcs-identity`.
+
+O Swagger não recebe Ingress público na VPS; use `kubectl port-forward` quando
+precisar acessá-lo operacionalmente. O endpoint público é
+`https://fcs-identity.flaviojcf.com.br/api`.
+
+### Secrets e variables do deploy
+
+Configure os secrets no repositório GitHub. O environment `production` continua
+sendo o gate de aprovação do deploy:
+
+| Tipo | Nome | Uso |
+|---|---|---|
+| Secret | `K3S_KUBECONFIG` | Kubeconfig capaz de aplicar os recursos do namespace. No primeiro deploy, use o kubeconfig administrativo do K3s; depois, rotacione para uma credencial limitada ao namespace. |
+| Secret | `VPS_DEPLOY_SSH_KEY` | Chave privada do usuário `fcs-vps-deployer` para abrir o túnel. |
+| Secret | `VPS_KNOWN_HOSTS` | Host key da VPS obtida por canal confiável. |
+| Variable | `VPS_HOST` | IP ou hostname da VPS. |
+| Variable | `VPS_DEPLOY_USER` | `fcs-infra-deployer`. |
+
+O Infisical deve conter os valores `sql-sa-password`,
+`keycloak-admin-password` e `manager-password` no projeto `fcs-platform-dd-uk`,
+ambiente `prod`, path `/platform`. O Operator instalado pelo `fcs-infra`
+sincroniza esses valores para o Secret Kubernetes `identity-runtime`.
 
 ---
 

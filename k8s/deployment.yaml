@@ -6,6 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/name: fcs-identity
     app.kubernetes.io/part-of: fcs
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
 spec:
   replicas: 1
   selector:
