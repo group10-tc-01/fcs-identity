@@ -5,6 +5,10 @@ metadata:
   namespace: fcs-identity
 spec:
   ingressClassName: fcs-traefik
+  tls:
+    - hosts:
+        - fcs-identity.flaviojcf.com.br
+      secretName: fcs-identity-tls
   rules:
     - host: fcs-identity.flaviojcf.com.br
       http:
