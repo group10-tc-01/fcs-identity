@@ -213,7 +213,7 @@ Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/g
   - `GET /health`
   - `GET /metrics`
 
-Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Na VPS, o `/health` é usado pelas probes do Kubernetes e o Datadog Agent consome `/metrics` e `/health` por Autodiscovery dentro da rede do pod; nenhum deles precisa de Ingress público.
+Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Na VPS, `/health`, `/metrics` e `/swagger` também são publicados diretamente pelo Ingress da aplicação para suporte operacional; o Datadog continua consumindo `/metrics` e `/health` por Autodiscovery dentro da rede do pod.
 
 ---
 
@@ -243,9 +243,12 @@ Namespace alvo: `fcs-identity`.
 Ele é criado e mantido pelo `fcs-infra`; por isso o Kustomize da aplicação não
 tenta recriá-lo.
 
-O Swagger não recebe Ingress público na VPS; use `kubectl port-forward` quando
-precisar acessá-lo operacionalmente. O endpoint público é
-`https://fcs-identity.flaviojcf.com.br/api`.
+Os caminhos públicos da VPS são:
+
+- `https://fcs-identity.flaviojcf.com.br/api`
+- `https://fcs-identity.flaviojcf.com.br/swagger`
+- `https://fcs-identity.flaviojcf.com.br/health`
+- `https://fcs-identity.flaviojcf.com.br/metrics`
 
 ### Secrets e variables do deploy
 
