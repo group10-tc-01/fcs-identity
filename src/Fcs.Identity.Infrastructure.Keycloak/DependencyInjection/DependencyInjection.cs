@@ -48,6 +48,8 @@ public static class DependencyInjection
             .GetRequiredSection(KeycloakSettings.SectionName)
             .Get<KeycloakSettings>()
             ?? throw new InvalidOperationException("Keycloak settings must be configured.");
+        var internalIssuer = $"{settings.BaseUrl.TrimEnd('/')}/realms/{settings.Realm}";
+        var issuer = string.IsNullOrWhiteSpace(settings.Issuer) ? internalIssuer : settings.Issuer;
 
         services.AddKeycloakWebApiAuthentication(
             keycloakOptions =>
@@ -80,6 +82,8 @@ public static class DependencyInjection
                 jwtBearerOptions.TokenValidationParameters.ValidateAudience = false;
                 jwtBearerOptions.TokenValidationParameters.NameClaimType = "preferred_username";
                 jwtBearerOptions.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
+                jwtBearerOptions.TokenValidationParameters.ValidIssuer = null;
+                jwtBearerOptions.TokenValidationParameters.ValidIssuers = [internalIssuer, issuer];
             });
 
         return services;

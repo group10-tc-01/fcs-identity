@@ -11,6 +11,7 @@ data:
   KafkaSettings__BootstrapServers: kafka-service.fcs-infra.svc.cluster.local:29092
   KafkaSettings__TopicName: audit-log-requested
   Keycloak__BaseUrl: http://keycloak-service.fcs-infra.svc.cluster.local:8080
+  Keycloak__Issuer: https://fcs-keycloak.flaviojcf.com.br/realms/conexao-solidaria
   Keycloak__Realm: conexao-solidaria
   Keycloak__ClientId: solidarity-api
   Keycloak__AdminRealm: master
