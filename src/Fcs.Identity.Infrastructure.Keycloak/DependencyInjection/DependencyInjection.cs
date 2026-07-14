@@ -9,7 +9,6 @@ using Keycloak.AuthServices.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Polly;
 using Polly.Extensions.Http;
 using Refit;
@@ -78,12 +77,9 @@ public static class DependencyInjection
                         return Task.CompletedTask;
                     }
                 };
-                jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateAudience = false,
-                    NameClaimType = "preferred_username",
-                    RoleClaimType = ClaimTypes.Role
-                };
+                jwtBearerOptions.TokenValidationParameters.ValidateAudience = false;
+                jwtBearerOptions.TokenValidationParameters.NameClaimType = "preferred_username";
+                jwtBearerOptions.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
             });
 
         return services;

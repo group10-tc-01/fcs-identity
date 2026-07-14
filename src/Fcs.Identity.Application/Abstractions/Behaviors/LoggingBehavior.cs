@@ -24,10 +24,7 @@ public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         var requestName = typeof(TRequest).Name;
         var stopwatch = Stopwatch.StartNew();
 
-        _logger.LogInformation(
-            "Handling application request {RequestName} with payload {@Payload}",
-            requestName,
-            request);
+        _logger.LogInformation("Handling application request {RequestName}", requestName);
 
         try
         {
