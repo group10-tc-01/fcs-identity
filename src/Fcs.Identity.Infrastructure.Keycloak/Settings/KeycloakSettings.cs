@@ -9,6 +9,8 @@ public sealed class KeycloakSettings
 
     public string BaseUrl { get; set; } = string.Empty;
 
+    public string Issuer { get; set; } = string.Empty;
+
     public string Realm { get; set; } = string.Empty;
 
     public string ClientId { get; set; } = string.Empty;
