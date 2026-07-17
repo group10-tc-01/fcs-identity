@@ -1,6 +1,7 @@
 using Fcs.Identity.Application.Abstractions.Identity;
 using Fcs.Identity.Application.Abstractions.Messaging;
 using Fcs.Identity.Application.Audit;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
 using Fcs.Identity.Domain.Abstractions;
 using Fcs.Identity.Domain.ManagerProfiles;
 using Microsoft.Extensions.Logging;

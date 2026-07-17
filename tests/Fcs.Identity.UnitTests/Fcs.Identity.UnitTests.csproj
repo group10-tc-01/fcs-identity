@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\keycloak\conexao-solidaria-realm.json" Link="keycloak\conexao-solidaria-realm.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Fcs.Identity.Application\Fcs.Identity.Application.csproj" />
     <ProjectReference Include="..\..\src\Fcs.Identity.Domain\Fcs.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\src\Fcs.Identity.Infrastructure.Keycloak\Fcs.Identity.Infrastructure.Keycloak.csproj" />

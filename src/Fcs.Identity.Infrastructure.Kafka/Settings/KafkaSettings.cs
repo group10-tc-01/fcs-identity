@@ -9,5 +9,5 @@ public sealed class KafkaSettings
 
     public string BootstrapServers { get; set; }
 
-    public string TopicName { get; set; }
+    public Dictionary<string, string> Topics { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

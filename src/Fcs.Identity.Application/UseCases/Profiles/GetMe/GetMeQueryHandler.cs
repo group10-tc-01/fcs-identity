@@ -1,6 +1,7 @@
 using Fcs.Identity.Application.Abstractions.Authentication;
 using Fcs.Identity.Application.Abstractions.Messaging;
 using Fcs.Identity.Application.Audit;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
 using Fcs.Identity.Domain.DonorProfiles;
 using Fcs.Identity.Domain.ManagerProfiles;
 using Fcs.Identity.Domain.Shared;

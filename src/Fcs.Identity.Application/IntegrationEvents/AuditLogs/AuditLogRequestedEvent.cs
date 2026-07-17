@@ -1,4 +1,4 @@
-namespace Fcs.Identity.Application.Audit;
+namespace Fcs.Identity.Application.IntegrationEvents.AuditLogs;
 
 public sealed record AuditLogRequestedEvent(
     Guid EventId,
