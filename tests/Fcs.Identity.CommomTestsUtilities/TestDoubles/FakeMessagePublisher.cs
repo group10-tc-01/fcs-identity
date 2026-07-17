@@ -5,6 +5,20 @@ namespace Fcs.Identity.CommomTestsUtilities.TestDoubles;
 public sealed class FakeMessagePublisher : IMessagePublisher
 {
     private readonly List<object> _publishedMessages = [];
+    private readonly List<string> _publishedTopicNames = [];
+
+    public Exception? ExceptionToThrow { get; private set; }
+
+    public IReadOnlyCollection<string> PublishedTopicNames
+    {
+        get
+        {
+            lock (_publishedTopicNames)
+            {
+                return _publishedTopicNames.ToArray();
+            }
+        }
+    }
 
     public IReadOnlyCollection<object> PublishedMessages
     {
@@ -23,13 +37,35 @@ public sealed class FakeMessagePublisher : IMessagePublisher
         {
             _publishedMessages.Clear();
         }
+
+        lock (_publishedTopicNames)
+        {
+            _publishedTopicNames.Clear();
+        }
     }
 
-    public Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken = default)
+    public void ConfigureFailure(Exception exception) => ExceptionToThrow = exception;
+
+    public Task PublishAsync<TMessage>(string topicName, TMessage message, CancellationToken cancellationToken = default)
     {
+        return PublishCoreAsync(topicName, message);
+    }
+
+    private Task PublishCoreAsync<TMessage>(string topicName, TMessage message)
+    {
+        if (ExceptionToThrow is not null)
+        {
+            return Task.FromException(ExceptionToThrow);
+        }
+
         lock (_publishedMessages)
         {
             _publishedMessages.Add(message!);
+        }
+
+        lock (_publishedTopicNames)
+        {
+            _publishedTopicNames.Add(topicName);
         }
 
         return Task.CompletedTask;
@@ -62,5 +98,23 @@ public sealed class FakeMessagePublisher : IMessagePublisher
         return publishedMessage is TMessage typedPublishedMessage
             ? typedPublishedMessage
             : throw new InvalidOperationException($"Expected message of type {typeof(TMessage).Name}, but found {publishedMessage.GetType().Name}.");
+    }
+
+    public async Task<TMessage> WaitForMessageAsync<TMessage>()
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(2);
+
+        while (DateTime.UtcNow < deadline)
+        {
+            var message = PublishedMessages.OfType<TMessage>().SingleOrDefault();
+            if (message is not null)
+            {
+                return message;
+            }
+
+            await Task.Delay(10);
+        }
+
+        throw new InvalidOperationException($"Expected one message of type {typeof(TMessage).Name}, but no message was published.");
     }
 }

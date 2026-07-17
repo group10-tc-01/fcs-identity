@@ -1,5 +1,6 @@
 using Fcs.Identity.Application.Abstractions.Identity;
 using Fcs.Identity.Application.Audit;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
 using Fcs.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcs.Identity.CommomTestsUtilities.TestDoubles;
 using Fcs.Identity.Domain.ManagerProfiles;
