@@ -2,7 +2,7 @@
 
 Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua como fachada do Keycloak e mantém os perfis de domínio (`DonorProfile` e `ManagerProfile`) associados aos usuários autenticáveis.
 
-> Microsserviço que compõe o MVP da Conexão Solidária junto a `fcs-campaign`, `fcs-donations`, `fcs-donation-worker`, `fcs-audit-logs`, `fcs-bff` e `fcs-web`.
+> Microsserviço que compõe o MVP da Conexão Solidária junto a `fcs-campaign`, `fcs-donations`, `fcs-donation-worker`, `fcs-notifications`, `fcs-audit-logs`, `fcs-bff` e `fcs-web`.
 
 ---
 
@@ -14,6 +14,7 @@ Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua 
 - Provisionamento administrativo (seed) de **GestorONG** no Keycloak e sincronização do `ManagerProfile` no `IdentityDb`.
 - Emissão de **JWT** pelo Keycloak para uso em todos os serviços com **RBAC** nas roles `GestorONG` e `Doador`.
 - Auditoria explícita de eventos relevantes via tópico Kafka `audit-log-requested`.
+- Publicação de `EmailNotificationRequestedEvent` para a `fcs-notifications` após o cadastro persistido de um Doador.
 
 A aplicação **não** armazena senha nem hash de senha. As credenciais permanecem no Keycloak.
 
