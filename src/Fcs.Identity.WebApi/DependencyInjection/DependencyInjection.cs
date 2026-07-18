@@ -138,10 +138,13 @@ public static class DependencyInjection
             {
                 otlpOptions.Endpoint = $"{settings.OtlpEndpoint}/v1/logs";
                 otlpOptions.Protocol = OtlpProtocol.HttpProtobuf;
-                otlpOptions.Headers = new Dictionary<string, string>
+                if (!string.IsNullOrWhiteSpace(settings.OtlpAuthHeader))
                 {
-                    ["Authorization"] = settings.OtlpAuthHeader
-                };
+                    otlpOptions.Headers = new Dictionary<string, string>
+                    {
+                        ["Authorization"] = settings.OtlpAuthHeader
+                    };
+                }
                 otlpOptions.ResourceAttributes = new Dictionary<string, object>
                 {
                     ["service.name"] = settings.ServiceName,
