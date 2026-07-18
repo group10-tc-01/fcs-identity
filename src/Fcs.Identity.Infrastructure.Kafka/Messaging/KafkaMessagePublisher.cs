@@ -22,8 +22,13 @@ public sealed class KafkaMessagePublisher : IMessagePublisher
         _logger = logger;
     }
 
-    public async Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken = default)
+    public async Task PublishAsync<TMessage>(string topicName, TMessage message, CancellationToken cancellationToken = default)
     {
+        if (!_settings.Topics.TryGetValue(topicName, out var resolvedTopicName) || string.IsNullOrWhiteSpace(resolvedTopicName))
+        {
+            throw new InvalidOperationException($"Kafka topic '{topicName}' is not configured.");
+        }
+
         var config = new ProducerConfig
         {
             BootstrapServers = _settings.BootstrapServers,
@@ -32,7 +37,7 @@ public sealed class KafkaMessagePublisher : IMessagePublisher
 
         using var producer = new ProducerBuilder<Null, string>(config).Build();
         var payload = JsonSerializer.Serialize(message, SerializerOptions);
-        await producer.ProduceAsync(_settings.TopicName, new Message<Null, string> { Value = payload }, cancellationToken);
-        _logger.LogInformation("Published message to topic {TopicName}", _settings.TopicName);
+        await producer.ProduceAsync(resolvedTopicName, new Message<Null, string> { Value = payload }, cancellationToken);
+        _logger.LogInformation("Published message to topic {TopicName}", resolvedTopicName);
     }
 }

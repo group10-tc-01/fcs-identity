@@ -1,5 +1,6 @@
 using Fcs.Identity.Application.Abstractions.Identity;
 using Fcs.Identity.Application.Audit;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
 using Fcs.Identity.Application.UseCases.Auth.Login;
 using Fcs.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcs.Identity.CommomTestsUtilities.TestDoubles;

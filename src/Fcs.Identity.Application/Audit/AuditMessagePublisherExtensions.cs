@@ -1,4 +1,5 @@
 using Fcs.Identity.Application.Abstractions.Messaging;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
 
 namespace Fcs.Identity.Application.Audit;
 
@@ -8,7 +9,7 @@ public static class AuditMessagePublisherExtensions
     {
         _ = Task.Run(async () =>
         {
-            await messagePublisher.PublishAsync(auditEvent, CancellationToken.None);
+            await messagePublisher.PublishAsync(KafkaTopicKeys.AuditLog, auditEvent, CancellationToken.None);
         }, CancellationToken.None);
     }
 }

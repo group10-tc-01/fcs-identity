@@ -2,7 +2,7 @@
 
 Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua como fachada do Keycloak e mantém os perfis de domínio (`DonorProfile` e `ManagerProfile`) associados aos usuários autenticáveis.
 
-> Microsserviço que compõe o MVP da Conexão Solidária junto a `fcs-campaigns`, `fcs-donations`, `fcs-donation-worker`, `fcs-solidarity-web` e `fcs-solidarity-infra`.
+> Microsserviço que compõe o MVP da Conexão Solidária junto a `fcs-campaign`, `fcs-donations`, `fcs-donation-worker`, `fcs-notifications`, `fcs-audit-logs`, `fcs-bff` e `fcs-web`.
 
 ---
 
@@ -14,6 +14,7 @@ Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua 
 - Provisionamento administrativo (seed) de **GestorONG** no Keycloak e sincronização do `ManagerProfile` no `IdentityDb`.
 - Emissão de **JWT** pelo Keycloak para uso em todos os serviços com **RBAC** nas roles `GestorONG` e `Doador`.
 - Auditoria explícita de eventos relevantes via tópico Kafka `audit-log-requested`.
+- Publicação de `EmailNotificationRequestedEvent` para a `fcs-notifications` após o cadastro persistido de um Doador.
 
 A aplicação **não** armazena senha nem hash de senha. As credenciais permanecem no Keycloak.
 
@@ -23,7 +24,7 @@ Referências diretas:
 
 - [Visão geral da arquitetura](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/overview.md)
 - [Modelo da fcs-identity](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/fcs-identity-model.md)
-- [Endpoints consolidados](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/endpoints.md)
+- [Fluxos de endpoints](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/endpoint-flows.md)
 
 ADRs relevantes:
 
@@ -43,8 +44,6 @@ Roles canônicas do MVP:
 | `Doador`     | Público, via `POST /api/v1/auth/register/donor`   |
 | `GestorONG`  | Seed administrativo na inicialização do serviço   |
 
-> Termos a evitar (vindos da fase 04): `Admin`, `User`, `Manager`, `SuperAdmin`. Os perfis canônicos do domínio são **Doador** e **GestorONG**.
-
 ---
 
 ## Estrutura do projeto
@@ -53,12 +52,10 @@ Roles canônicas do MVP:
 src/
   Fcs.Identity.Domain/                  # DonorProfile, ManagerProfile, value objects
   Fcs.Identity.Application/             # Casos de uso, CQRS, validação
-  Fcs.Identity.Infrastructure.Auth/     # Validação de JWT
-  Fcs.Identity.Infrastructure.Http/     # Clientes HTTP (Refit/Polly)
   Fcs.Identity.Infrastructure.Keycloak/ # Integração com Admin API + token endpoint
   Fcs.Identity.Infrastructure.SqlServer/# EF Core + IdentityDb
   Fcs.Identity.Infrastructure.Kafka/    # Publicação de eventos quando aplicável
-  Fcs.Identity.Messages/                # Contratos de eventos
+  Fcs.Identity.Resources/               # Contratos de mensagens e erros
   Fcs.Identity.WebApi/                  # Controllers v1, middlewares, DI, /health, /metrics
 tests/
   Fcs.Identity.UnitTests/
@@ -68,7 +65,7 @@ tests/
   Fcs.Identity.CommomTestsUtilities/
 ```
 
-Estrutura interna alinhada ao padrão da fase 04 ([ADR 0023](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0023-use-phase-04-dotnet-service-structure.md)).
+Estrutura interna alinhada ao padrão da fase 04 ([ADR 0019](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0019-use-phase-04-dotnet-service-structure.md)).
 
 ---
 
@@ -85,7 +82,92 @@ Base path: `/api/v1`.
 | GET    | `/health`                         | Operacional   | Healthcheck                          |
 | GET    | `/metrics`                        | Operacional   | Métricas Prometheus/OpenTelemetry    |
 
-Padrão de resposta `ApiResponse<T>` documentado em [endpoints.md](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/endpoints.md).
+Padrão de resposta `ApiResponse<T>` e cenários de falha documentados nos [fluxos de endpoints](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/endpoint-flows.md).
+
+### Fluxos principais dos endpoints
+
+#### POST /api/v1/auth/register/donor
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Cliente
+    participant IdentityApi as fcs-identity API
+    participant Keycloak as Keycloak
+    participant IdentityDb as IdentityDb
+    participant AuditKafka as Kafka audit-log-requested
+
+    Client->>IdentityApi: POST /api/v1/auth/register/donor
+    IdentityApi->>IdentityApi: Validar requisição
+    IdentityApi->>IdentityDb: Verificar unicidade de Email e Cpf
+    IdentityDb-->>IdentityApi: Email e CPF disponíveis
+    IdentityApi->>Keycloak: Criar usuário com role Doador
+    Keycloak-->>IdentityApi: keycloakUserId
+    IdentityApi->>IdentityDb: Salvar DonorProfile
+    IdentityApi->>AuditKafka: Publicar AuditLogRequested DonorRegistered
+    IdentityApi-->>Client: 201 Created ApiResponse<DonorResponse>
+```
+
+#### POST /api/v1/auth/login
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Cliente
+    participant IdentityApi as fcs-identity API
+    participant Keycloak as Keycloak
+    participant IdentityDb as IdentityDb
+    participant AuditKafka as Kafka audit-log-requested
+
+    Client->>IdentityApi: POST /api/v1/auth/login
+    IdentityApi->>IdentityApi: Validar requisição
+    IdentityApi->>Keycloak: Autenticar email e senha
+    Keycloak-->>IdentityApi: accessToken e refreshToken
+    IdentityApi->>IdentityDb: Resolver perfil por keycloakUserId ou email
+    IdentityDb-->>IdentityApi: DonorProfile ou ManagerProfile
+    IdentityApi->>AuditKafka: Publicar AuditLogRequested LoginSucceeded
+    IdentityApi-->>Client: 200 OK ApiResponse<TokenResponse>
+```
+
+#### POST /api/v1/auth/refresh
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Cliente
+    participant IdentityApi as fcs-identity API
+    participant Keycloak as Keycloak
+    participant AuditKafka as Kafka audit-log-requested
+
+    Client->>IdentityApi: POST /api/v1/auth/refresh
+    IdentityApi->>IdentityApi: Validar requisição
+    IdentityApi->>Keycloak: Renovar refresh token
+    Keycloak-->>IdentityApi: novo accessToken e refreshToken
+    IdentityApi->>AuditKafka: Publicar AuditLogRequested TokenRefreshed
+    IdentityApi-->>Client: 200 OK ApiResponse<TokenResponse>
+```
+
+#### GET /api/v1/me
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Cliente
+    participant IdentityApi as fcs-identity API
+    participant IdentityDb as IdentityDb
+
+    Client->>IdentityApi: GET /api/v1/me com Bearer token
+    IdentityApi->>IdentityApi: Validar JWT
+    IdentityApi->>IdentityApi: Ler keycloakUserId e role
+    alt Role Doador
+        IdentityApi->>IdentityDb: Buscar DonorProfile por keycloakUserId
+        IdentityDb-->>IdentityApi: DonorProfile
+    else Role GestorONG
+        IdentityApi->>IdentityDb: Buscar ManagerProfile por keycloakUserId
+        IdentityDb-->>IdentityApi: ManagerProfile
+    end
+    IdentityApi-->>Client: 200 OK ApiResponse<MeResponse>
+```
 
 ### Exemplo: cadastrar Doador
 
@@ -128,7 +210,7 @@ Resposta:
 }
 ```
 
-O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais APIs (`fcs-campaigns`, `fcs-donations`).
+O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais APIs (`fcs-campaign`, `fcs-donations`).
 
 ---
 
@@ -142,7 +224,7 @@ O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais A
 
 ## Subindo o ambiente local
 
-O `docker-compose.yml` deste repositório sobe **apenas** as dependências deste serviço (SQL Server, Keycloak, Kafka, Seq) e, opcionalmente, a própria API. Para o ambiente completo integrado da Conexão Solidária utilize o repositório `fcs-solidarity-infra`.
+O `docker-compose.yml` deste repositório sobe **apenas** as dependências deste serviço (SQL Server, Keycloak, Kafka, Seq) e, opcionalmente, a própria API. Para o ambiente completo integrado da Conexão Solidária utilize o repositório `fcs-infra`.
 
 ### 1. Subir dependências
 
@@ -201,7 +283,7 @@ dotnet test tests/Fcs.Identity.FunctionalTests
 dotnet test tests/Fcs.Identity.ArchitectureTests
 ```
 
-Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0025-test-strategy-for-apis-and-worker.md)).
+Cobertura mínima exigida pela esteira: **80%** ([ADR 0021](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0021-test-strategy-for-apis-and-worker.md)).
 
 ---
 
@@ -213,13 +295,13 @@ Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/g
   - `GET /health`
   - `GET /metrics`
 
-Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Na VPS, `/health`, `/metrics` e `/swagger` também são publicados diretamente pelo Ingress da aplicação para suporte operacional; o Datadog continua consumindo `/metrics` e `/health` por Autodiscovery dentro da rede do pod.
+Na VPS, a exposição pública passa pelo Traefik com TLS; endpoints `/internal/*` permanecem restritos a Services e DNS interno do Kubernetes, conforme a [visão geral da arquitetura](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/overview.md). Os endpoints `/health`, `/metrics` e `/swagger` também são disponibilizados pelo Ingress da aplicação para suporte operacional; o Datadog continua consumindo `/metrics` e `/health` por Autodiscovery dentro da rede do pod.
 
 ---
 
 ## CI/CD
 
-A esteira está em `.github/workflows/` reutilizando os workflows reutilizáveis do repositório `fcs-pipelines` ([ADR 0022](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0022-reuse-fcs-pipelines-for-ci-cd.md)):
+A esteira está em `.github/workflows/` reutilizando os workflows reutilizáveis do repositório `fcs-pipelines` ([ADR 0018](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0018-reuse-fcs-pipelines-for-ci-cd.md)):
 
 - `branch-name-check.yml` — política de nomes de branch
 - `dotnet-service-ci.yml` — build .NET, testes, SonarCloud, Trivy, build da imagem Docker
@@ -237,7 +319,7 @@ Deployment, ConfigMap, Service, RBAC, Ingress HTTPS, Certificate e o
 `InfisicalStaticSecret` que gera `identity-runtime`. Os recursos compartilhados
 (Traefik, cert-manager, Infisical Operator, Keycloak, Kafka e bancos) são
 gerenciados pelo `fcs-infra`; valores de produção não são versionados neste
-repositório ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
+repositório ([ADR 0022](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0022-use-separated-kubernetes-namespaces.md)).
 
 Namespace alvo: `fcs-identity`.
 Ele é criado e mantido pelo `fcs-infra`; por isso o Kustomize da aplicação não
@@ -297,6 +379,6 @@ dotnet ef database update \
 | Senha com hash seguro                                                 | Delegado ao Keycloak (a fcs-identity não guarda senha)       |
 | Endpoint `/health` e `/metrics`                                       | Expostos pela WebApi                                         |
 | Imagem Docker e pipeline                                              | `Dockerfile` + workflows em `.github/workflows`              |
-| Microsserviço distinto                                                | `fcs-identity` separado de `fcs-campaigns` e `fcs-donations` |
+| Microsserviço distinto                                                | `fcs-identity` separado de `fcs-campaign` e `fcs-donations` |
 
 Os fluxos de **Campanha**, **Intenção de Doação**, **Doação** processada e **Painel de Transparência** são implementados pelos demais serviços da plataforma. Veja a [visão geral da arquitetura](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/overview.md).

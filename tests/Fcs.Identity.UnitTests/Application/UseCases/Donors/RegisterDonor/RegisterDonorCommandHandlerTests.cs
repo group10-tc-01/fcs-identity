@@ -1,5 +1,8 @@
 using Fcs.Identity.Application.Abstractions.Identity;
+using Fcs.Identity.Application.Abstractions.Messaging;
 using Fcs.Identity.Application.Audit;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
+using Fcs.Identity.Application.IntegrationEvents.EmailNotifications;
 using Fcs.Identity.Application.UseCases.Donors.RegisterDonor;
 using Fcs.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcs.Identity.CommomTestsUtilities.Builders.Donors;
@@ -33,12 +36,60 @@ public sealed class RegisterDonorCommandHandlerTests
         result.Value.Email.Should().Be(command.Email);
         result.Value.Cpf.Should().Contain("*");
         donorProfileRepository.DonorProfiles.Should().ContainSingle();
-        var auditMessage = await messagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
+        var auditMessage = await messagePublisher.WaitForMessageAsync<AuditLogRequestedEvent>();
+        messagePublisher.PublishedTopicNames.Should().Contain(KafkaTopicKeys.AuditLog);
         auditMessage.Action.Should().Be(AuditActions.DonorRegistered);
         auditMessage.EntityName.Should().Be("DonorProfile");
         auditMessage.ActorType.Should().Be("Doador");
         identityProvider.CreateDonorCalls.Should().Be(1);
         identityProvider.LastCreateDonorRequest.Should().BeEquivalentTo(new CreateDonorIdentityUserRequest(command.FullName, command.Email, command.Password));
+        unitOfWork.SaveChangesCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Given_Handle_Called_When_DonorIsPersisted_Then_ShouldPublishWelcomeNotification()
+    {
+        // Arrange
+        var donorProfileRepository = new InMemoryDonorProfileRepository();
+        var messagePublisher = new FakeMessagePublisher();
+        var identityProvider = new FakeIdentityProvider();
+        var unitOfWork = new FakeUnitOfWork();
+        var handler = CreateHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
+        var command = new RegisterDonorCommandBuilder().Build();
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var notification = await messagePublisher.WaitForMessageAsync<EmailNotificationRequestedEvent>();
+        messagePublisher.PublishedTopicNames.Should().Contain(KafkaTopicKeys.EmailNotification);
+        notification.EventId.Should().NotBeEmpty();
+        notification.Type.Should().Be(EmailNotificationRequestedEvent.DonorWelcome);
+        notification.RecipientEmail.Should().Be(result.Value.Email);
+        notification.DonationId.Should().BeNull();
+        notification.Amount.Should().BeNull();
+        notification.OccurredAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
+    public async Task Given_Handle_Called_When_WelcomePublicationFails_Then_ShouldNotRollbackDonorRegistration()
+    {
+        // Arrange
+        var donorProfileRepository = new InMemoryDonorProfileRepository();
+        var messagePublisher = new FakeMessagePublisher();
+        var identityProvider = new FakeIdentityProvider();
+        var unitOfWork = new FakeUnitOfWork();
+        messagePublisher.ConfigureFailure(new InvalidOperationException("Kafka unavailable."));
+        var handler = CreateHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
+        var command = new RegisterDonorCommandBuilder().Build();
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        donorProfileRepository.DonorProfiles.Should().ContainSingle();
         unitOfWork.SaveChangesCalls.Should().Be(1);
     }
 

@@ -1,6 +1,8 @@
 using Fcs.Identity.Application.Abstractions.Identity;
 using Fcs.Identity.Application.Abstractions.Messaging;
 using Fcs.Identity.Application.Audit;
+using Fcs.Identity.Application.IntegrationEvents.AuditLogs;
+using Fcs.Identity.Application.IntegrationEvents.EmailNotifications;
 using Fcs.Identity.Domain.Abstractions;
 using Fcs.Identity.Domain.DonorProfiles;
 using Fcs.Identity.Domain.Shared.Results;
@@ -109,6 +111,8 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
                 actorType: "Doador",
                 entityId: donorProfile.Id.ToString()));
 
+        await PublishWelcomeNotificationAsync(donorProfile, cancellationToken);
+
         _logger.LogInformation(
             "Register donor flow completed. DonorProfileId: {DonorProfileId}. Email: {Email}",
             donorProfile.Id,
@@ -119,6 +123,21 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
             donorProfile.FullName,
             donorProfile.Email.Value,
             MaskCpf(donorProfile.Cpf.Value));
+    }
+
+    private async Task PublishWelcomeNotificationAsync(DonorProfile donorProfile, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _messagePublisher.PublishAsync(
+                KafkaTopicKeys.EmailNotification,
+                new EmailNotificationRequestedEvent(Guid.NewGuid(), EmailNotificationRequestedEvent.DonorWelcome, donorProfile.Email.Value, null, null, DateTime.UtcNow),
+                cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogError(exception, "Failed to publish donor welcome notification for donor {DonorProfileId}", donorProfile.Id);
+        }
     }
 
     private static string MaskCpf(string cpf)

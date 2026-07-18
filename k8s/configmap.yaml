@@ -9,7 +9,8 @@ data:
   HttpsRedirection__Enabled: "false"
   Database__ApplyMigrations: "true"
   KafkaSettings__BootstrapServers: kafka-service.fcs-infra.svc.cluster.local:29092
-  KafkaSettings__TopicName: audit-log-requested
+  KafkaSettings__Topics__AuditLog: audit-log-requested
+  KafkaSettings__Topics__EmailNotification: email-notification-requested
   Keycloak__BaseUrl: http://keycloak-service.fcs-infra.svc.cluster.local:8080
   Keycloak__Issuer: https://fcs-keycloak.flaviojcf.com.br/realms/conexao-solidaria
   Keycloak__Realm: conexao-solidaria
