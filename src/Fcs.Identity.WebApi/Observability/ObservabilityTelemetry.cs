@@ -41,7 +41,7 @@ public static class ObservabilityTelemetry
         {
             builder.AddOtlpExporter(exporterOpts =>
             {
-                exporterOpts.Endpoint = new Uri($"{settings.OtlpEndpoint}/otlp/v1/traces");
+                exporterOpts.Endpoint = new Uri($"{settings.OtlpEndpoint}/v1/traces");
                 exporterOpts.Protocol = OtlpExportProtocol.HttpProtobuf;
                 exporterOpts.Headers = $"Authorization={settings.OtlpAuthHeader}";
             });
@@ -66,7 +66,7 @@ public static class ObservabilityTelemetry
         {
             builder.AddOtlpExporter(exporterOpts =>
             {
-                exporterOpts.Endpoint = new Uri($"{settings.OtlpEndpoint}/otlp/v1/metrics");
+                exporterOpts.Endpoint = new Uri($"{settings.OtlpEndpoint}/v1/metrics");
                 exporterOpts.Protocol = OtlpExportProtocol.HttpProtobuf;
                 exporterOpts.Headers = $"Authorization={settings.OtlpAuthHeader}";
             });

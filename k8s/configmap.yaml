@@ -24,4 +24,6 @@ data:
   ManagerSeed__Email: gestor@ong.test
   Cors__AllowedOrigins__0: https://fcs-web.flaviojcf.com.br
   Observability__ServiceName: Fcs.Identity
-  Observability__EnableOtlpExporter: "false"
+  Observability__EnableOtlpExporter: "true"
+  Observability__OtlpEndpoint: http://otel-collector-service.fcs-infra.svc.cluster.local:4318
+  Observability__OtlpAuthHeader: ""
