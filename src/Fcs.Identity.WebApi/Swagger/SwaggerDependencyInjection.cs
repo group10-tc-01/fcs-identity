@@ -43,11 +43,19 @@ public static class SwaggerDependencyInjection
         return $"""
             API de identidade e acesso da plataforma Conexão Solidária.
 
-            ### Implantação em execução
+            ### Versão
 
-            - **Data/hora (UTC):** {deployedAt}
-            - **Commit:** `{sourceSha}`
-            - **Imagem:** `{image}`
+            **Data/hora (UTC)**
+
+            {deployedAt}
+
+            **Commit**
+
+            {sourceSha}
+
+            **Imagem**
+
+            {image}
             """;
     }
 }

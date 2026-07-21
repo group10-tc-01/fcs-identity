@@ -126,6 +126,7 @@ public static class DependencyInjection
         var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.Information()
             .Enrich.FromLogContext()
+            .Enrich.With<TraceContextEnricher>()
             .Enrich.WithMachineName()
             .Enrich.WithProperty("Application", "Fcs.Identity")
             .Enrich.WithProperty("Environment", environment)
@@ -135,12 +136,15 @@ public static class DependencyInjection
         {
             loggerConfig.WriteTo.OpenTelemetry(otlpOptions =>
             {
-                otlpOptions.Endpoint = $"{settings.OtlpEndpoint}/otlp/v1/logs";
+                otlpOptions.Endpoint = $"{settings.OtlpEndpoint}/v1/logs";
                 otlpOptions.Protocol = OtlpProtocol.HttpProtobuf;
-                otlpOptions.Headers = new Dictionary<string, string>
+                if (!string.IsNullOrWhiteSpace(settings.OtlpAuthHeader))
                 {
-                    ["Authorization"] = settings.OtlpAuthHeader
-                };
+                    otlpOptions.Headers = new Dictionary<string, string>
+                    {
+                        ["Authorization"] = settings.OtlpAuthHeader
+                    };
+                }
                 otlpOptions.ResourceAttributes = new Dictionary<string, object>
                 {
                     ["service.name"] = settings.ServiceName,
