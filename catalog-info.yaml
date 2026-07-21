@@ -1,0 +1,56 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: fcs-identity
+  title: FCS Identity
+  description: Fachada de identidade, perfis e acesso da plataforma Conexão Solidária.
+  annotations:
+    github.com/project-slug: group10-tc-01/fcs-identity
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-id: fcs-identity
+    backstage.io/kubernetes-namespace: fcs-identity
+  links:
+    - title: Datadog
+      url: https://us5.datadoghq.com/metric/explorer?query=service%3Afcs-identity
+      icon: dashboard
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/fcs-team
+  system: conexao-solidaria
+  providesApis:
+    - fcs-identity-api
+  dependsOn:
+    - resource:default/sqlserver
+    - resource:default/keycloak
+    - resource:default/kafka
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: fcs-identity-api
+  title: FCS Identity API
+  description: API para cadastro, autenticação e perfis.
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:default/fcs-team
+  system: conexao-solidaria
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: FCS Identity API
+      version: v1
+    paths:
+      /api/v1/auth/register/donor:
+        post:
+          summary: Cadastra um doador
+      /api/v1/auth/login:
+        post:
+          summary: Autentica um usuário
+      /api/v1/auth/refresh:
+        post:
+          summary: Renova o token de acesso
+      /api/v1/me:
+        get:
+          summary: Consulta o perfil autenticado
